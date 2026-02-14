@@ -15,10 +15,24 @@
   /* Electron: make sidebar header draggable for native window controls */
   .electron-app .sidebar-header {
     -webkit-app-region: drag;
-    padding-top: 28px;
+    padding-top: 52px;
+  }
+  .electron-app .sidebar.collapsed .sidebar-header {
+    padding-top: 52px;
   }
   .electron-app .sidebar-header button,
-  .electron-app .sidebar-header .new-thread-btn {
+  .electron-app .sidebar-header .new-thread-btn,
+  .electron-app .sidebar-header .sidebar-collapse-btn,
+  .electron-app .collapsed-new-thread-btn {
+    -webkit-app-region: no-drag;
+  }
+  .electron-app .main-header {
+    -webkit-app-region: drag;
+  }
+  .electron-app .main-header button,
+  .electron-app .main-header select,
+  .electron-app .main-header input,
+  .electron-app .main-header a {
     -webkit-app-region: no-drag;
   }
 
