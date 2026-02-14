@@ -2232,6 +2232,411 @@
     }
     .sidebar.open { transform: translateX(0); }
   }
+
+  /* ══════════════════════════════════════════════
+     COMMAND CENTER — Browse panels
+     ══════════════════════════════════════════════ */
+
+  /* Sidebar navigation tabs */
+  .sidebar-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .sidebar-nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    padding: 10px 4px 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .sidebar-nav-btn:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+  }
+  .sidebar-nav-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .sidebar-nav-btn svg {
+    width: 15px;
+    height: 15px;
+    opacity: 0.7;
+  }
+  .sidebar-nav-btn.active svg {
+    opacity: 1;
+  }
+  .sidebar.collapsed .sidebar-nav {
+    flex-direction: column;
+    padding: 4px;
+    gap: 0;
+  }
+  .sidebar.collapsed .sidebar-nav-btn {
+    padding: 8px 4px;
+    font-size: 0;
+  }
+  .sidebar.collapsed .sidebar-nav-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Browse panel (replaces thread-list when on non-chat tab) */
+  .browse-panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .browse-panel.active {
+    display: flex;
+  }
+  .browse-panel-header {
+    padding: 12px 16px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .browse-panel-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .browse-panel-count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+  .browse-search {
+    margin: 0 12px 8px;
+    padding: 7px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .browse-search:focus {
+    border-color: var(--accent-dim);
+  }
+  .browse-search::placeholder {
+    color: var(--text-tertiary);
+  }
+  .browse-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 8px;
+  }
+
+  /* Browse items (generic list items used across panels) */
+  .browse-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .browse-item:hover {
+    background: var(--bg-hover);
+  }
+  .browse-item.active {
+    background: var(--bg-tertiary);
+    border-color: var(--border);
+  }
+  .browse-item-title {
+    font-size: 13px;
+    font-weight: 450;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .browse-item-desc {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .browse-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+  .browse-tag {
+    display: inline-flex;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .browse-tag.builtin { background: rgba(212, 165, 116, 0.12); color: var(--accent); }
+  .browse-tag.custom { background: rgba(130, 200, 130, 0.12); color: #82c882; }
+  .browse-tag.clawdhub { background: rgba(130, 160, 220, 0.12); color: #82a0dc; }
+  .browse-tag.node { background: rgba(130, 200, 130, 0.1); color: #6b9; }
+  .browse-tag.python { background: rgba(80, 130, 200, 0.1); color: #68a; }
+  .browse-tag.rust { background: rgba(200, 120, 60, 0.1); color: #c86; }
+  .browse-tag.git { background: rgba(200, 100, 80, 0.1); color: #c64; }
+  .browse-tag.main { background: rgba(212, 165, 116, 0.12); color: var(--accent); }
+  .browse-tag.anima { background: rgba(123, 143, 176, 0.12); color: #7b8fb0; }
+  .browse-tag.enabled { background: rgba(100, 200, 100, 0.12); color: #6c6; }
+  .browse-tag.disabled { background: rgba(200, 100, 100, 0.12); color: #c66; }
+
+  /* Detail view in main area */
+  .detail-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .detail-view.active {
+    display: flex;
+  }
+  .detail-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .detail-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .detail-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .detail-subtitle {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .detail-back {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .detail-back:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-dim);
+    color: var(--text-primary);
+  }
+  .detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+  .detail-content pre {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .detail-content h1, .detail-content h2, .detail-content h3 {
+    color: var(--text-primary);
+    margin: 20px 0 8px;
+    font-weight: 500;
+  }
+  .detail-content h1 { font-size: 20px; }
+  .detail-content h2 { font-size: 16px; }
+  .detail-content h3 { font-size: 14px; }
+  .detail-content p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .detail-section {
+    margin-bottom: 24px;
+  }
+  .detail-section-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  /* Cron job cards */
+  .cron-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .cron-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .cron-card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .cron-card-detail {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+  .cron-card-detail span {
+    color: var(--text-secondary);
+  }
+
+  /* Session transcript in detail */
+  .transcript-msg {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .transcript-msg:last-child { border-bottom: none; }
+  .transcript-msg-role {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .transcript-msg-role.user { color: var(--text-secondary); }
+  .transcript-msg-role.assistant { color: var(--accent); }
+  .transcript-msg-content {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .transcript-msg-meta {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+  }
+
+  /* System status cards */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .status-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .status-card-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+  .status-card-value {
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .status-card-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  /* Agent filter tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 12px 6px;
+    flex-shrink: 0;
+  }
+  .filter-tab {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-tertiary);
+    font-size: 10px;
+    font-family: inherit;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .filter-tab:hover { background: var(--bg-hover); color: var(--text-secondary); }
+  .filter-tab.active {
+    background: var(--accent-glow);
+    border-color: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* Memory type badges */
+  .memory-type-badge {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .memory-type-badge.core { background: var(--accent); }
+  .memory-type-badge.daily { background: #6b9; }
+  .memory-type-badge.context { background: #68a; }
+  .memory-type-badge.document { background: #98a; }
+  .memory-type-badge.data { background: #a86; }
+  .memory-type-badge.genome { background: #c86; }
+  .memory-type-badge.other { background: var(--text-tertiary); }
 </style>
 </head>
 <body>
@@ -2273,7 +2678,86 @@
         </div>
       </div>
     </div>
+    <!-- Navigation Tabs -->
+    <div class="sidebar-nav" id="sidebarNav">
+      <button class="sidebar-nav-btn active" data-panel="chat" onclick="switchPanel('chat')" title="Conversations">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Chat
+      </button>
+      <button class="sidebar-nav-btn" data-panel="skills" onclick="switchPanel('skills')" title="Skills">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Skills
+      </button>
+      <button class="sidebar-nav-btn" data-panel="history" onclick="switchPanel('history')" title="History">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        History
+      </button>
+      <button class="sidebar-nav-btn" data-panel="cron" onclick="switchPanel('cron')" title="Tasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Tasks
+      </button>
+      <button class="sidebar-nav-btn" data-panel="projects" onclick="switchPanel('projects')" title="Projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        Projects
+      </button>
+      <button class="sidebar-nav-btn" data-panel="memory" onclick="switchPanel('memory')" title="Memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4c0 1.95-1.4 3.58-3.25 3.93L12 22l-.75-12.07A4.001 4.001 0 0112 2z"/><circle cx="12" cy="6" r="1"/></svg>
+        Memory
+      </button>
+    </div>
+
+    <!-- Chat thread list (default) -->
     <div class="thread-list" id="threadList"></div>
+
+    <!-- Skills browse panel -->
+    <div class="browse-panel" id="panelSkills">
+      <div class="browse-panel-header">
+        <span class="browse-panel-title">Skills</span>
+        <span class="browse-panel-count" id="skillsCount">—</span>
+      </div>
+      <input class="browse-search" id="skillsSearch" placeholder="Search skills..." oninput="filterSkills()">
+      <div class="browse-list" id="skillsList"></div>
+    </div>
+
+    <!-- History browse panel -->
+    <div class="browse-panel" id="panelHistory">
+      <div class="browse-panel-header">
+        <span class="browse-panel-title">Sessions</span>
+        <span class="browse-panel-count" id="historyCount">—</span>
+      </div>
+      <div class="filter-tabs" id="historyAgentFilter"></div>
+      <input class="browse-search" id="historySearch" placeholder="Search conversations..." oninput="filterHistory()">
+      <div class="browse-list" id="historyList"></div>
+    </div>
+
+    <!-- Cron browse panel -->
+    <div class="browse-panel" id="panelCron">
+      <div class="browse-panel-header">
+        <span class="browse-panel-title">Scheduled Tasks</span>
+        <span class="browse-panel-count" id="cronCount">—</span>
+      </div>
+      <div class="browse-list" id="cronList"></div>
+    </div>
+
+    <!-- Projects browse panel -->
+    <div class="browse-panel" id="panelProjects">
+      <div class="browse-panel-header">
+        <span class="browse-panel-title">Projects</span>
+        <span class="browse-panel-count" id="projectsCount">—</span>
+      </div>
+      <input class="browse-search" id="projectsSearch" placeholder="Search projects..." oninput="filterProjects()">
+      <div class="browse-list" id="projectsList"></div>
+    </div>
+
+    <!-- Memory browse panel -->
+    <div class="browse-panel" id="panelMemory">
+      <div class="browse-panel-header">
+        <span class="browse-panel-title">Memory</span>
+        <span class="browse-panel-count" id="memoryCount">—</span>
+      </div>
+      <div class="browse-list" id="memoryList"></div>
+    </div>
+
     <button class="collapsed-new-thread-btn" onclick="createThread()" title="New chat">+</button>
     <div class="sidebar-footer">
       <span class="status-dot"></span>
@@ -2327,6 +2811,18 @@
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
       <img id="lightboxImg" src="" alt="">
     </div>
+  </div>
+
+  <!-- Detail View (for browsing skills/sessions/projects/memory) -->
+  <div class="detail-view" id="detailView">
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="detail-title" id="detailTitle">—</div>
+        <div class="detail-subtitle" id="detailSubtitle">—</div>
+      </div>
+      <button class="detail-back" onclick="closeDetailView()">← Back</button>
+    </div>
+    <div class="detail-content" id="detailContent"></div>
   </div>
 
   <!-- Resize Handle -->
@@ -4927,6 +5423,545 @@ function checkForArtifactsAtIndex(msgIdx) {
     }
   });
 }
+
+// ══════════════════════════════════════════════
+// ── COMMAND CENTER ──
+// ══════════════════════════════════════════════
+
+let currentPanel = 'chat';
+let ccCache = { skills: null, history: null, cron: null, projects: null, memory: null, system: null };
+let ccFilters = { historyAgent: null, historySearch: '', skillsSearch: '', projectsSearch: '' };
+
+function switchPanel(panel) {
+  currentPanel = panel;
+
+  // Update nav buttons
+  document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.panel === panel);
+  });
+
+  // Show/hide thread list vs browse panels
+  const threadList = document.getElementById('threadList');
+  const browseNames = ['Skills', 'History', 'Cron', 'Projects', 'Memory'];
+
+  // Always close detail view when switching panels
+  closeDetailView();
+
+  // Also hide/show the main header appropriately
+  const mainHeader = document.querySelector('.main-header');
+
+  const messagesEl = document.getElementById('messages');
+  const inputArea = document.querySelector('.input-area');
+
+  if (panel === 'chat') {
+    threadList.style.display = '';
+    browseNames.forEach(p => {
+      const el = document.getElementById('panel' + p);
+      if (el) el.classList.remove('active');
+    });
+    if (mainHeader) mainHeader.style.display = '';
+    messagesEl.style.display = '';
+    inputArea.style.display = '';
+  } else {
+    threadList.style.display = 'none';
+    browseNames.forEach(p => {
+      const el = document.getElementById('panel' + p);
+      if (el) el.classList.toggle('active', p.toLowerCase() === panel);
+    });
+    // Hide chat area when browsing
+    if (mainHeader) mainHeader.style.display = 'none';
+    messagesEl.style.display = 'none';
+    inputArea.style.display = 'none';
+    // Load data for the panel
+    loadPanelData(panel);
+  }
+}
+
+async function loadPanelData(panel) {
+  switch (panel) {
+    case 'skills': return loadSkills();
+    case 'history': return loadHistory();
+    case 'cron': return loadCron();
+    case 'projects': return loadProjects();
+    case 'memory': return loadMemory();
+  }
+}
+
+// ── Skills ──
+
+async function loadSkills() {
+  if (ccCache.skills) return renderSkills(ccCache.skills);
+  try {
+    const res = await fetch('/api/skills');
+    const data = await res.json();
+    ccCache.skills = data.skills;
+    renderSkills(data.skills);
+  } catch (err) {
+    document.getElementById('skillsList').innerHTML = `<div class="browse-item-desc">Failed to load skills</div>`;
+  }
+}
+
+function renderSkills(skills) {
+  const search = ccFilters.skillsSearch.toLowerCase();
+  const filtered = search
+    ? skills.filter(s => s.name.toLowerCase().includes(search) || s.description.toLowerCase().includes(search))
+    : skills;
+
+  document.getElementById('skillsCount').textContent = `${filtered.length}`;
+  const list = document.getElementById('skillsList');
+  list.innerHTML = filtered.map(s => `
+    <div class="browse-item" onclick="openSkillDetail('${s.id}')">
+      <div class="browse-item-title">
+        ${s.name}
+        <span class="browse-tag ${s.source}">${s.source}</span>
+      </div>
+      <div class="browse-item-desc">${escapeHtml(s.description || 'No description')}</div>
+    </div>
+  `).join('');
+}
+
+function filterSkills() {
+  ccFilters.skillsSearch = document.getElementById('skillsSearch').value;
+  if (ccCache.skills) renderSkills(ccCache.skills);
+}
+
+async function openSkillDetail(id) {
+  try {
+    const res = await fetch(`/api/skills/${id}`);
+    const skill = await res.json();
+    showDetailView(skill.name, `${skill.source} skill · ${(skill.files || []).length} files`, renderMarkdownBasic(skill.content || 'No content'));
+  } catch {
+    showDetailView(id, 'Error', '<p>Failed to load skill details</p>');
+  }
+}
+
+// ── History (Sessions) ──
+
+async function loadHistory() {
+  if (ccCache.history) return renderHistory(ccCache.history);
+  try {
+    const res = await fetch('/api/sessions?limit=500');
+    const data = await res.json();
+    ccCache.history = data;
+    renderHistoryAgentFilter(data.agents);
+    renderHistory(data);
+  } catch (err) {
+    document.getElementById('historyList').innerHTML = `<div class="browse-item-desc">Failed to load sessions</div>`;
+  }
+}
+
+function renderHistoryAgentFilter(agents) {
+  const container = document.getElementById('historyAgentFilter');
+  container.innerHTML = `
+    <button class="filter-tab active" onclick="setHistoryAgent(null, this)">All</button>
+    ${agents.map(a => `<button class="filter-tab" onclick="setHistoryAgent('${a}', this)">${a}</button>`).join('')}
+  `;
+}
+
+function setHistoryAgent(agent, btn) {
+  ccFilters.historyAgent = agent;
+  document.querySelectorAll('#historyAgentFilter .filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (ccCache.history) renderHistory(ccCache.history);
+}
+
+function renderHistory(data) {
+  const search = ccFilters.historySearch.toLowerCase();
+  let sessions = data.sessions;
+
+  if (ccFilters.historyAgent) {
+    sessions = sessions.filter(s => s.agent === ccFilters.historyAgent);
+  }
+  if (search) {
+    sessions = sessions.filter(s => s.preview.toLowerCase().includes(search) || s.id.includes(search));
+  }
+
+  document.getElementById('historyCount').textContent = `${sessions.length}`;
+  const list = document.getElementById('historyList');
+
+  // Group by date
+  const groups = {};
+  for (const s of sessions) {
+    const date = (s.timestamp || s.modifiedAt || '').slice(0, 10) || 'Unknown';
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(s);
+  }
+
+  let html = '';
+  for (const [date, items] of Object.entries(groups)) {
+    const d = new Date(date + 'T00:00:00');
+    const label = isNaN(d) ? date : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    html += `<div style="font-size:10px;color:var(--text-tertiary);padding:10px 12px 4px;letter-spacing:0.1em;text-transform:uppercase">${label}</div>`;
+    for (const s of items) {
+      const time = (s.timestamp || '').slice(11, 16) || '';
+      const preview = s.preview || '(empty session)';
+      html += `
+        <div class="browse-item" onclick="openSessionDetail('${s.agent}', '${s.id}')">
+          <div class="browse-item-title">
+            <span class="browse-tag ${s.agent}">${s.agent}</span>
+            ${escapeHtml(preview.slice(0, 80))}${preview.length > 80 ? '…' : ''}
+          </div>
+          <div class="browse-item-meta">
+            <span>${time}</span>
+            <span>${s.messageCount} msgs</span>
+            ${s.totalCost > 0 ? `<span>$${s.totalCost.toFixed(4)}</span>` : ''}
+            <span>${s.model || ''}</span>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  list.innerHTML = html || '<div class="browse-item-desc" style="padding:12px">No sessions found</div>';
+}
+
+function filterHistory() {
+  ccFilters.historySearch = document.getElementById('historySearch').value;
+  if (ccCache.history) renderHistory(ccCache.history);
+}
+
+async function openSessionDetail(agent, id) {
+  try {
+    const res = await fetch(`/api/sessions/${agent}/${id}`);
+    const session = await res.json();
+
+    let content = '';
+
+    // Summary bar
+    content += `<div class="status-grid">
+      <div class="status-card"><div class="status-card-label">Messages</div><div class="status-card-value">${session.messageCount}</div></div>
+      <div class="status-card"><div class="status-card-label">Model</div><div class="status-card-value" style="font-size:14px">${session.model || '—'}</div></div>
+      <div class="status-card"><div class="status-card-label">Cost</div><div class="status-card-value">$${(session.totalCost || 0).toFixed(4)}</div></div>
+    </div>`;
+
+    // Transcript
+    content += `<div class="detail-section"><div class="detail-section-title">Transcript</div>`;
+    for (const msg of (session.transcript || [])) {
+      const roleClass = msg.role === 'user' ? 'user' : 'assistant';
+      const text = msg.content || '';
+      // Truncate very long messages
+      const display = text.length > 3000 ? text.slice(0, 3000) + '\n\n… (truncated)' : text;
+      content += `
+        <div class="transcript-msg">
+          <div class="transcript-msg-role ${roleClass}">${msg.role}${msg.model ? ' · ' + msg.model : ''}</div>
+          <div class="transcript-msg-content">${escapeHtml(display)}</div>
+          ${msg.timestamp ? `<div class="transcript-msg-meta">${new Date(msg.timestamp).toLocaleString()}</div>` : ''}
+        </div>
+      `;
+    }
+    content += '</div>';
+
+    const date = session.timestamp ? new Date(session.timestamp).toLocaleString() : '—';
+    showDetailView(`${agent} session`, `${date} · ${session.messageCount} messages`, content);
+  } catch {
+    showDetailView('Session', 'Error', '<p>Failed to load session</p>');
+  }
+}
+
+// ── Cron ──
+
+async function loadCron() {
+  try {
+    const res = await fetch('/api/cron');
+    const data = await res.json();
+    ccCache.cron = data.jobs;
+    renderCron(data.jobs);
+  } catch {
+    document.getElementById('cronList').innerHTML = `<div class="browse-item-desc">Failed to load cron jobs</div>`;
+  }
+}
+
+function renderCron(jobs) {
+  document.getElementById('cronCount').textContent = `${jobs.length}`;
+  const list = document.getElementById('cronList');
+
+  list.innerHTML = jobs.map(job => {
+    const lastRun = job.lastRun ? new Date(job.lastRun).toLocaleString() : 'Never';
+    const nextRun = job.nextRun ? new Date(job.nextRun).toLocaleString() : '—';
+    return `
+      <div class="cron-card">
+        <div class="cron-card-header">
+          <span class="cron-card-name">${job.name}</span>
+          <span class="browse-tag ${job.enabled ? 'enabled' : 'disabled'}">${job.enabled ? 'active' : 'disabled'}</span>
+        </div>
+        <div class="cron-card-detail">
+          <span class="browse-tag ${job.agentId}">${job.agentId}</span>
+          ${job.scheduleHuman || job.schedule?.expr || ''}
+        </div>
+        <div class="cron-card-detail" style="margin-top:4px">
+          Last: <span>${lastRun}</span>
+          ${job.lastDuration ? ` · ${job.lastDuration}s` : ''}
+          ${job.lastStatus ? ` · ${job.lastStatus}` : ''}
+        </div>
+        <div class="cron-card-detail">
+          Next: <span>${nextRun}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Projects ──
+
+async function loadProjects() {
+  if (ccCache.projects) return renderProjects(ccCache.projects);
+  try {
+    const res = await fetch('/api/projects');
+    const data = await res.json();
+    ccCache.projects = data.projects;
+    renderProjects(data.projects);
+  } catch {
+    document.getElementById('projectsList').innerHTML = `<div class="browse-item-desc">Failed to load projects</div>`;
+  }
+}
+
+function renderProjects(projects) {
+  const search = ccFilters.projectsSearch.toLowerCase();
+  const filtered = search
+    ? projects.filter(p => p.name.toLowerCase().includes(search) || (p.description || '').toLowerCase().includes(search))
+    : projects;
+
+  document.getElementById('projectsCount').textContent = `${filtered.length}`;
+  const list = document.getElementById('projectsList');
+
+  list.innerHTML = filtered.map(p => `
+    <div class="browse-item" onclick="openProjectDetail('${p.id}')">
+      <div class="browse-item-title">
+        ${escapeHtml(p.name)}
+        ${p.markers.map(m => `<span class="browse-tag ${m}">${m}</span>`).join('')}
+      </div>
+      <div class="browse-item-desc">${escapeHtml(p.description || 'No description')}</div>
+      <div class="browse-item-meta">
+        <span>${p.workspace}</span>
+        ${p.version ? `<span>v${p.version}</span>` : ''}
+        ${p.lastCommit ? `<span>${p.lastCommit.message?.slice(0, 40) || ''}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterProjects() {
+  ccFilters.projectsSearch = document.getElementById('projectsSearch').value;
+  if (ccCache.projects) renderProjects(ccCache.projects);
+}
+
+async function openProjectDetail(id) {
+  try {
+    const res = await fetch(`/api/projects/${id}`);
+    const project = await res.json();
+
+    let content = '';
+    content += `<div class="status-grid">
+      <div class="status-card"><div class="status-card-label">Workspace</div><div class="status-card-value" style="font-size:14px">${project.workspace}</div></div>
+      ${project.version ? `<div class="status-card"><div class="status-card-label">Version</div><div class="status-card-value" style="font-size:14px">${project.version}</div></div>` : ''}
+      <div class="status-card"><div class="status-card-label">Stack</div><div class="status-card-value" style="font-size:14px">${project.markers.join(', ') || '—'}</div></div>
+    </div>`;
+
+    if (project.gitRemote) {
+      content += `<div class="detail-section"><div class="detail-section-title">Git Remote</div><p><a href="${project.gitRemote}" target="_blank" style="color:var(--accent)">${project.gitRemote}</a></p></div>`;
+    }
+
+    if (project.lastCommit) {
+      content += `<div class="detail-section"><div class="detail-section-title">Last Commit</div><p><code>${project.lastCommit.hash}</code> — ${escapeHtml(project.lastCommit.message || '')}<br><span style="color:var(--text-tertiary)">${project.lastCommit.date || ''}</span></p></div>`;
+    }
+
+    if (project.files && project.files.length) {
+      content += `<div class="detail-section"><div class="detail-section-title">Files</div><pre>${project.files.join('\n')}</pre></div>`;
+    }
+
+    if (project.readme) {
+      content += `<div class="detail-section"><div class="detail-section-title">README</div><div>${renderMarkdownBasic(project.readme)}</div></div>`;
+    }
+
+    showDetailView(project.name, `${project.path}`, content);
+  } catch {
+    showDetailView(id, 'Error', '<p>Failed to load project</p>');
+  }
+}
+
+// ── Memory ──
+
+async function loadMemory() {
+  if (ccCache.memory) return renderMemory(ccCache.memory);
+  try {
+    const res = await fetch('/api/memory');
+    const data = await res.json();
+    ccCache.memory = data.files;
+    renderMemory(data.files);
+  } catch {
+    document.getElementById('memoryList').innerHTML = `<div class="browse-item-desc">Failed to load memory files</div>`;
+  }
+}
+
+function renderMemory(files) {
+  document.getElementById('memoryCount').textContent = `${files.length}`;
+  const list = document.getElementById('memoryList');
+
+  // Group by type
+  const typeOrder = ['core', 'context', 'daily', 'document', 'genome', 'identity', 'data', 'other'];
+  const groups = {};
+  for (const f of files) {
+    const t = f.type || 'other';
+    if (!groups[t]) groups[t] = [];
+    groups[t].push(f);
+  }
+
+  let html = '';
+  for (const type of typeOrder) {
+    const items = groups[type];
+    if (!items || !items.length) continue;
+    html += `<div style="font-size:10px;color:var(--text-tertiary);padding:10px 12px 4px;letter-spacing:0.1em;text-transform:uppercase">${type}</div>`;
+    for (const f of items) {
+      const size = f.size > 1024 ? `${(f.size / 1024).toFixed(1)}KB` : `${f.size}B`;
+      const modified = f.modifiedAt ? new Date(f.modifiedAt).toLocaleDateString() : '';
+      html += `
+        <div class="browse-item" onclick="openMemoryDetail('${encodeURIComponent(f.id)}')">
+          <div class="browse-item-title">
+            <span class="memory-type-badge ${f.type}"></span>
+            ${f.name}
+          </div>
+          <div class="browse-item-meta">
+            <span>${size}</span>
+            <span>${modified}</span>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  list.innerHTML = html || '<div class="browse-item-desc" style="padding:12px">No memory files found</div>';
+}
+
+async function openMemoryDetail(encodedId) {
+  const id = decodeURIComponent(encodedId);
+  try {
+    const res = await fetch(`/api/memory/${id}`);
+    const data = await res.json();
+    const modified = data.modifiedAt ? new Date(data.modifiedAt).toLocaleString() : '';
+    const size = data.size > 1024 ? `${(data.size / 1024).toFixed(1)}KB` : `${data.size}B`;
+    showDetailView(id, `${size} · ${modified}`, `<div>${renderMarkdownBasic(data.content)}</div>`);
+  } catch {
+    showDetailView(id, 'Error', '<p>Failed to load memory file</p>');
+  }
+}
+
+// ── Detail View ──
+
+function showDetailView(title, subtitle, contentHtml) {
+  const messagesEl = document.getElementById('messages');
+  const inputArea = document.querySelector('.input-area');
+  const mainHeader = document.querySelector('.main-header');
+  const detailView = document.getElementById('detailView');
+
+  // Hide chat elements, show detail
+  messagesEl.style.display = 'none';
+  inputArea.style.display = 'none';
+  if (mainHeader) mainHeader.style.display = 'none';
+  detailView.classList.add('active');
+
+  document.getElementById('detailTitle').textContent = title;
+  document.getElementById('detailSubtitle').textContent = subtitle;
+  document.getElementById('detailContent').innerHTML = contentHtml;
+
+  // Scroll to top
+  document.getElementById('detailContent').scrollTop = 0;
+}
+
+function closeDetailView() {
+  const messagesEl = document.getElementById('messages');
+  const inputArea = document.querySelector('.input-area');
+  const mainHeader = document.querySelector('.main-header');
+  const detailView = document.getElementById('detailView');
+
+  detailView.classList.remove('active');
+
+  // Only restore chat elements if we're on the chat panel
+  if (currentPanel === 'chat') {
+    messagesEl.style.display = '';
+    inputArea.style.display = '';
+    if (mainHeader) mainHeader.style.display = '';
+  } else {
+    // For non-chat panels, hide everything in main area
+    messagesEl.style.display = 'none';
+    inputArea.style.display = 'none';
+    if (mainHeader) mainHeader.style.display = 'none';
+  }
+}
+
+// ── Markdown Basic Renderer (for detail views) ──
+
+function renderMarkdownBasic(md) {
+  if (!md) return '';
+  // Strip YAML frontmatter
+  md = md.replace(/^---\n[\s\S]*?\n---\n?/, '');
+  let html = escapeHtml(md);
+
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold and italic
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary)">$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;font-size:12px">$1</code>');
+
+  // Code blocks
+  html = html.replace(/```[\w]*\n([\s\S]*?)```/g, '<pre>$1</pre>');
+
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent)">$1</a>');
+
+  // Horizontal rules
+  html = html.replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0">');
+
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<li style="margin-left:16px;color:var(--text-secondary)">$1</li>');
+
+  // Tables (basic)
+  html = html.replace(/^\|(.+)\|$/gm, (match, content) => {
+    const cells = content.split('|').map(c => c.trim());
+    if (cells.every(c => c.match(/^[-:]+$/))) return ''; // separator row
+    const tag = 'td';
+    return '<tr>' + cells.map(c => `<${tag} style="padding:4px 8px;border:1px solid var(--border)">${c}</${tag}>`).join('') + '</tr>';
+  });
+
+  // Wrap consecutive <tr> in <table>
+  html = html.replace(/((?:<tr>.*<\/tr>\s*)+)/g, '<table style="border-collapse:collapse;margin:12px 0;font-size:12px;width:100%">$1</table>');
+
+  // Paragraphs (double newlines)
+  html = html.replace(/\n\n/g, '</p><p>');
+  html = '<p>' + html + '</p>';
+
+  // Clean up empty paragraphs
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  html = html.replace(/<p>(<h[123]>)/g, '$1');
+  html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+  html = html.replace(/<p>(<pre>)/g, '$1');
+  html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+  html = html.replace(/<p>(<hr[^>]*>)<\/p>/g, '$1');
+  html = html.replace(/<p>(<table)/g, '$1');
+  html = html.replace(/(<\/table>)<\/p>/g, '$1');
+  html = html.replace(/<p>(<li)/g, '$1');
+  html = html.replace(/(<\/li>)<\/p>/g, '$1');
+
+  return html;
+}
+
+// ── escapeHtml helper (if not already defined) ──
+if (typeof window._escapeHtmlDefined === 'undefined') {
+  window._escapeHtmlDefined = true;
+  if (typeof escapeHtml !== 'function') {
+    window.escapeHtml = function(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    };
+  }
+}
+
 
 // ══════════════════════════════════════════════
 // ── Boot ──

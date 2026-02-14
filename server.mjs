@@ -4,18 +4,38 @@ import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync, statSync } from 'fs';
-import { join, dirname, extname } from 'path';
+import { join, dirname, extname, basename } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
+import { createReadStream } from 'fs';
+import { createInterface } from 'readline';
 
 // ── Paths ──
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = 8088;
+const PORT = parseInt(process.env.PORT || '8088', 10);
 const GATEWAY = 'http://127.0.0.1:18789';
 
 const DATA_DIR = join(__dirname, 'data');
 const THREADS_DIR = join(DATA_DIR, 'threads');
 const UPLOADS_DIR = join(DATA_DIR, 'uploads');
 const PUBLIC_DIR = join(__dirname, 'public');
+
+// ── Clawdbot / System Paths ──
+const HOME = process.env.HOME || '/Users/rileycoyote';
+const CLAWDBOT_DIR = join(HOME, '.clawdbot');
+const CLAWD_DIR = join(HOME, 'clawd');
+const MEMORY_DIR = join(CLAWD_DIR, 'memory');
+const REPOS_DIR = join(HOME, 'Documents/Repositories');
+
+// Skill directories (three sources)
+const SKILL_DIRS = [
+  { path: join(CLAWDBOT_DIR, 'skills'), source: 'clawdhub' },
+  { path: join(CLAWD_DIR, 'skills'), source: 'custom' },
+  { path: join(HOME, '.nvm/versions/node/v22.19.0/lib/node_modules/clawdbot/skills'), source: 'builtin' },
+];
+
+// Session directories (per agent)
+const AGENTS_DIR = join(CLAWDBOT_DIR, 'agents');
 
 // Ensure directories exist
 [DATA_DIR, THREADS_DIR, UPLOADS_DIR, PUBLIC_DIR].forEach(dir => {
@@ -570,7 +590,725 @@ app.delete('/api/canvas/:id', (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-// 4. STATIC FILE SERVING
+// 4. COMMAND CENTER APIs
+// ══════════════════════════════════════════════
+
+// ── 4a. SKILLS BROWSER ──
+
+function parseSkillMeta(skillDir) {
+  const skillMdPath = join(skillDir, 'SKILL.md');
+  if (!existsSync(skillMdPath)) return null;
+
+  try {
+    const content = readFileSync(skillMdPath, 'utf-8');
+    const meta = { name: basename(skillDir), description: '', content };
+
+    // Parse YAML frontmatter
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (fmMatch) {
+      const fm = fmMatch[1];
+      const nameMatch = fm.match(/^name:\s*(.+)$/m);
+      const descMatch = fm.match(/^description:\s*(.+)$/m);
+      if (nameMatch) meta.name = nameMatch[1].trim();
+      if (descMatch) meta.description = descMatch[1].trim();
+    }
+
+    // If no description from frontmatter, grab first paragraph after heading
+    if (!meta.description) {
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('name:') && !line.startsWith('description:') && !line.startsWith('allowed-tools:')) {
+          meta.description = line.slice(0, 200);
+          break;
+        }
+      }
+    }
+
+    return meta;
+  } catch {
+    return null;
+  }
+}
+
+app.get('/api/skills', (req, res) => {
+  try {
+    const skills = [];
+    for (const { path: dir, source } of SKILL_DIRS) {
+      if (!existsSync(dir)) continue;
+      const entries = readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const skillDir = join(dir, entry.name);
+        const meta = parseSkillMeta(skillDir);
+        if (meta) {
+          skills.push({
+            id: entry.name,
+            name: meta.name,
+            description: meta.description,
+            source,
+            path: skillDir,
+          });
+        }
+      }
+    }
+    // Deduplicate by id (custom overrides clawdhub overrides builtin)
+    const seen = new Map();
+    const priority = { custom: 3, clawdhub: 2, builtin: 1 };
+    for (const skill of skills) {
+      const existing = seen.get(skill.id);
+      if (!existing || priority[skill.source] > priority[existing.source]) {
+        seen.set(skill.id, skill);
+      }
+    }
+    const deduped = Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+    res.json({ skills: deduped, total: deduped.length });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+app.get('/api/skills/:id', (req, res) => {
+  try {
+    for (const { path: dir, source } of SKILL_DIRS) {
+      const skillDir = join(dir, req.params.id);
+      if (existsSync(skillDir)) {
+        const meta = parseSkillMeta(skillDir);
+        if (meta) {
+          // List all files in skill directory
+          const files = readdirSync(skillDir).filter(f => !f.startsWith('.'));
+          return res.json({
+            id: req.params.id,
+            name: meta.name,
+            description: meta.description,
+            source,
+            content: meta.content,
+            files,
+          });
+        }
+      }
+    }
+    errorResponse(res, 404, 'not_found', 'Skill not found');
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+
+// ── 4b. CONVERSATIONS ARCHIVE ──
+
+async function parseSessionFile(filePath, { summaryOnly = false } = {}) {
+  return new Promise((resolve) => {
+    const lines = [];
+    let lineCount = 0;
+    const rl = createInterface({ input: createReadStream(filePath), crlfDelay: Infinity });
+    rl.on('line', (line) => {
+      lineCount++;
+      // For summary mode, only read first 15 lines (session meta + first messages)
+      if (summaryOnly && lineCount > 15) {
+        rl.close();
+        return;
+      }
+      try { lines.push(JSON.parse(line)); } catch { /* skip */ }
+    });
+    rl.on('close', () => resolve(lines));
+    rl.on('error', () => resolve([]));
+  });
+}
+
+function extractSessionSummary(records) {
+  const session = records.find(r => r.type === 'session') || {};
+  const modelChange = records.find(r => r.type === 'model_change');
+  const messages = records.filter(r => r.type === 'message' && r.message);
+
+  // Get first user message for preview
+  const firstUser = messages.find(m => m.message.role === 'user');
+  let preview = '';
+  if (firstUser?.message?.content) {
+    const content = firstUser.message.content;
+    if (typeof content === 'string') {
+      preview = content.slice(0, 200);
+    } else if (Array.isArray(content)) {
+      const textBlock = content.find(c => c.type === 'text');
+      if (textBlock) preview = textBlock.text.slice(0, 200);
+    }
+  }
+
+  // Strip cron prefixes from preview
+  preview = preview.replace(/^\[cron:[^\]]+\]\s*/, '');
+
+  // Calculate total cost
+  let totalCost = 0;
+  for (const msg of messages) {
+    if (msg.message?.usage?.cost?.total) {
+      totalCost += msg.message.usage.cost.total;
+    }
+  }
+
+  return {
+    id: session.id || basename(filePath, '.jsonl'),
+    timestamp: session.timestamp || null,
+    model: modelChange?.modelId || null,
+    provider: modelChange?.provider || null,
+    messageCount: messages.length,
+    preview,
+    totalCost: Math.round(totalCost * 10000) / 10000,
+    isCron: preview.startsWith('[cron:') || (firstUser?.message?.content?.[0]?.text || '').includes('[cron:'),
+  };
+}
+
+// Session index cache — rebuilt on first request and invalidated every 60s
+let sessionIndexCache = null;
+let sessionIndexCacheTime = 0;
+const SESSION_CACHE_TTL = 60_000;
+
+async function buildSessionIndex() {
+  const now = Date.now();
+  if (sessionIndexCache && (now - sessionIndexCacheTime) < SESSION_CACHE_TTL) {
+    return sessionIndexCache;
+  }
+
+  const agents = existsSync(AGENTS_DIR) ? readdirSync(AGENTS_DIR, { withFileTypes: true })
+    .filter(e => e.isDirectory()).map(e => e.name) : [];
+
+  const sessions = [];
+  const parsePromises = [];
+
+  for (const agentName of agents) {
+    const sessionsDir = join(AGENTS_DIR, agentName, 'sessions');
+    if (!existsSync(sessionsDir)) continue;
+
+    const files = readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
+    for (const file of files) {
+      const filePath = join(sessionsDir, file);
+      parsePromises.push(
+        (async () => {
+          try {
+            const stat = statSync(filePath);
+            const records = await parseSessionFile(filePath, { summaryOnly: true });
+            const summary = extractSessionSummary(records);
+            summary.agent = agentName;
+            summary.fileSize = stat.size;
+            summary.modifiedAt = stat.mtime.toISOString();
+            return summary;
+          } catch { return null; }
+        })()
+      );
+    }
+  }
+
+  const results = await Promise.all(parsePromises);
+  for (const s of results) {
+    if (s) sessions.push(s);
+  }
+
+  // Sort by timestamp descending
+  sessions.sort((a, b) => {
+    const ta = a.timestamp || a.modifiedAt || '';
+    const tb = b.timestamp || b.modifiedAt || '';
+    return tb.localeCompare(ta);
+  });
+
+  sessionIndexCache = { sessions, agents };
+  sessionIndexCacheTime = now;
+  return sessionIndexCache;
+}
+
+app.get('/api/sessions', async (req, res) => {
+  try {
+    const { agent, limit = 50, offset = 0, search } = req.query;
+    const { sessions: allSessions, agents } = await buildSessionIndex();
+
+    let filtered = allSessions;
+    if (agent) filtered = filtered.filter(s => s.agent === agent);
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(s =>
+        s.preview.toLowerCase().includes(q) || s.id.includes(q)
+      );
+    }
+
+    const total = filtered.length;
+    const paged = filtered.slice(Number(offset), Number(offset) + Number(limit));
+
+    res.json({ sessions: paged, total, agents });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+app.get('/api/sessions/:agent/:id', async (req, res) => {
+  try {
+    const filePath = join(AGENTS_DIR, req.params.agent, 'sessions', `${req.params.id}.jsonl`);
+    if (!existsSync(filePath)) return errorResponse(res, 404, 'not_found', 'Session not found');
+
+    const records = await parseSessionFile(filePath);
+    const summary = extractSessionSummary(records);
+    summary.agent = req.params.agent;
+
+    // Extract full message transcript
+    const transcript = records
+      .filter(r => r.type === 'message' && r.message)
+      .map(r => ({
+        id: r.id,
+        role: r.message.role,
+        content: typeof r.message.content === 'string'
+          ? r.message.content
+          : (r.message.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n'),
+        timestamp: r.timestamp,
+        model: r.message.model || null,
+        usage: r.message.usage || null,
+        toolUse: (r.message.content || []).filter(c => c.type === 'tool_use').map(c => ({
+          name: c.name,
+          id: c.id,
+        })),
+      }));
+
+    res.json({ ...summary, transcript });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+
+// ── 4c. CRON JOBS / SCHEDULED TASKS ──
+
+const CRON_JOBS_FILE = join(CLAWDBOT_DIR, 'cron', 'jobs.json');
+const CRON_RUNS_DIR = join(CLAWDBOT_DIR, 'cron', 'runs');
+
+function readCronJobs() {
+  if (!existsSync(CRON_JOBS_FILE)) return [];
+  try {
+    const data = JSON.parse(readFileSync(CRON_JOBS_FILE, 'utf-8'));
+    return data.jobs || [];
+  } catch { return []; }
+}
+
+function formatCronSchedule(schedule) {
+  if (!schedule) return '';
+  const { expr, tz } = schedule;
+  // Human-readable cron expression
+  const parts = (expr || '').split(' ');
+  if (parts.length < 5) return expr;
+
+  const [min, hour, dom, mon, dow] = parts;
+  let desc = '';
+  if (min === '0' && hour.startsWith('*/')) desc = `Every ${hour.slice(2)} hours`;
+  else if (min.match(/^\d+$/) && hour.startsWith('*/')) desc = `At :${min.padStart(2,'0')} every ${hour.slice(2)} hours`;
+  else if (hour.includes('-')) desc = `${min === '0' ? 'On the hour' : `At :${min}`}, ${hour} hours`;
+  else desc = expr;
+
+  if (tz) desc += ` (${tz.replace('America/', '')})`;
+  return desc;
+}
+
+app.get('/api/cron', (req, res) => {
+  try {
+    const jobs = readCronJobs().map(job => ({
+      ...job,
+      scheduleHuman: formatCronSchedule(job.schedule),
+      nextRun: job.state?.nextRunAtMs ? new Date(job.state.nextRunAtMs).toISOString() : null,
+      lastRun: job.state?.lastRunAtMs ? new Date(job.state.lastRunAtMs).toISOString() : null,
+      lastStatus: job.state?.lastStatus || null,
+      lastDuration: job.state?.lastDurationMs ? Math.round(job.state.lastDurationMs / 1000) : null,
+    }));
+    res.json({ jobs, total: jobs.length });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+app.get('/api/cron/:id/runs', (req, res) => {
+  try {
+    // Check runs directory for this job
+    const runsDir = join(CRON_RUNS_DIR, req.params.id);
+    if (!existsSync(runsDir)) {
+      // Try flat runs directory
+      const runs = [];
+      if (existsSync(CRON_RUNS_DIR)) {
+        for (const f of readdirSync(CRON_RUNS_DIR)) {
+          if (f.startsWith(req.params.id) && f.endsWith('.json')) {
+            try {
+              const data = JSON.parse(readFileSync(join(CRON_RUNS_DIR, f), 'utf-8'));
+              runs.push(data);
+            } catch {}
+          }
+        }
+      }
+      return res.json({ runs });
+    }
+
+    const runs = [];
+    for (const f of readdirSync(runsDir).filter(f => f.endsWith('.json')).slice(-20)) {
+      try {
+        const data = JSON.parse(readFileSync(join(runsDir, f), 'utf-8'));
+        runs.push(data);
+      } catch {}
+    }
+    runs.sort((a, b) => (b.startedAt || '').localeCompare(a.startedAt || ''));
+    res.json({ runs });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+
+// ── 4d. PROJECTS ──
+
+function discoverProjects() {
+  const projects = [];
+
+  // Scan ~/clawd for project dirs (has package.json, pyproject.toml, Cargo.toml, or .git)
+  const projectMarkers = ['package.json', 'pyproject.toml', 'Cargo.toml', 'setup.py'];
+  const skipDirs = new Set(['node_modules', '.git', 'dist', 'build', 'memory', 'memories', 'skills', 'design-refs', 'design-agents', 'research', 'ops', 'canvas', 'chatgpt-v2-designs', 'polyphonic-ref', 'x-drafts']);
+
+  if (existsSync(CLAWD_DIR)) {
+    for (const entry of readdirSync(CLAWD_DIR, { withFileTypes: true })) {
+      if (!entry.isDirectory() || skipDirs.has(entry.name) || entry.name.startsWith('.')) continue;
+      const dir = join(CLAWD_DIR, entry.name);
+      const hasMarker = projectMarkers.some(m => existsSync(join(dir, m)));
+      const hasGit = existsSync(join(dir, '.git'));
+
+      if (hasMarker || hasGit) {
+        const project = {
+          id: entry.name,
+          name: entry.name,
+          path: dir,
+          workspace: 'clawd',
+          markers: [],
+        };
+
+        // Try to read package.json for metadata
+        const pkgPath = join(dir, 'package.json');
+        if (existsSync(pkgPath)) {
+          try {
+            const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+            project.name = pkg.name || entry.name;
+            project.description = pkg.description || '';
+            project.version = pkg.version;
+            project.markers.push('node');
+          } catch { /* skip */ }
+        }
+
+        // Check for Python
+        if (existsSync(join(dir, 'pyproject.toml')) || existsSync(join(dir, 'setup.py')) || existsSync(join(dir, 'requirements.txt'))) {
+          project.markers.push('python');
+        }
+
+        // Check for Rust
+        if (existsSync(join(dir, 'Cargo.toml'))) {
+          project.markers.push('rust');
+        }
+
+        // Check git info
+        if (hasGit) {
+          project.markers.push('git');
+          try {
+            const remote = execSync('git remote get-url origin 2>/dev/null', { cwd: dir, encoding: 'utf-8' }).trim();
+            project.gitRemote = remote;
+          } catch { /* no remote */ }
+          try {
+            const lastCommit = execSync('git log -1 --format="%H|%s|%ai" 2>/dev/null', { cwd: dir, encoding: 'utf-8' }).trim();
+            const [hash, message, date] = lastCommit.split('|');
+            project.lastCommit = { hash: hash?.slice(0, 8), message, date };
+          } catch { /* no commits */ }
+        }
+
+        // Check for README
+        const readmePath = join(dir, 'README.md');
+        if (existsSync(readmePath)) {
+          try {
+            const readme = readFileSync(readmePath, 'utf-8');
+            if (!project.description) {
+              // Grab first paragraph after title
+              const lines = readme.split('\n');
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line && !line.startsWith('#')) {
+                  project.description = line.slice(0, 300);
+                  break;
+                }
+              }
+            }
+            project.hasReadme = true;
+          } catch { /* skip */ }
+        }
+
+        // Stat for last modified
+        try {
+          const stat = statSync(dir);
+          project.modifiedAt = stat.mtime.toISOString();
+        } catch { /* skip */ }
+
+        projects.push(project);
+      }
+    }
+  }
+
+  // Scan ~/Documents/Repositories
+  if (existsSync(REPOS_DIR)) {
+    for (const entry of readdirSync(REPOS_DIR, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+      const dir = join(REPOS_DIR, entry.name);
+      const hasMarker = projectMarkers.some(m => existsSync(join(dir, m)));
+      const hasGit = existsSync(join(dir, '.git'));
+
+      if (hasMarker || hasGit) {
+        const project = {
+          id: `repos-${entry.name}`,
+          name: entry.name,
+          path: dir,
+          workspace: 'repositories',
+          markers: [],
+        };
+
+        const pkgPath = join(dir, 'package.json');
+        if (existsSync(pkgPath)) {
+          try {
+            const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+            project.name = pkg.name || entry.name;
+            project.description = pkg.description || '';
+            project.version = pkg.version;
+            project.markers.push('node');
+          } catch { /* skip */ }
+        }
+
+        if (hasGit) {
+          project.markers.push('git');
+          try {
+            const remote = execSync('git remote get-url origin 2>/dev/null', { cwd: dir, encoding: 'utf-8' }).trim();
+            project.gitRemote = remote;
+          } catch {}
+          try {
+            const lastCommit = execSync('git log -1 --format="%H|%s|%ai" 2>/dev/null', { cwd: dir, encoding: 'utf-8' }).trim();
+            const [hash, message, date] = lastCommit.split('|');
+            project.lastCommit = { hash: hash?.slice(0, 8), message, date };
+          } catch {}
+        }
+
+        try {
+          const stat = statSync(dir);
+          project.modifiedAt = stat.mtime.toISOString();
+        } catch {}
+
+        projects.push(project);
+      }
+    }
+  }
+
+  // Sort by last modified
+  projects.sort((a, b) => (b.modifiedAt || '').localeCompare(a.modifiedAt || ''));
+  return projects;
+}
+
+app.get('/api/projects', (req, res) => {
+  try {
+    const projects = discoverProjects();
+    res.json({ projects, total: projects.length });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+app.get('/api/projects/:id', (req, res) => {
+  try {
+    const projects = discoverProjects();
+    const project = projects.find(p => p.id === req.params.id);
+    if (!project) return errorResponse(res, 404, 'not_found', 'Project not found');
+
+    // Add directory listing
+    try {
+      project.files = readdirSync(project.path)
+        .filter(f => !f.startsWith('.') && f !== 'node_modules')
+        .slice(0, 50);
+    } catch { project.files = []; }
+
+    // Read README if available
+    const readmePath = join(project.path, 'README.md');
+    if (existsSync(readmePath)) {
+      try { project.readme = readFileSync(readmePath, 'utf-8'); } catch {}
+    }
+
+    res.json(project);
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+
+// ── 4e. MEMORY EXPLORER ──
+
+app.get('/api/memory', (req, res) => {
+  try {
+    const files = [];
+
+    // Main MEMORY.md
+    const mainMemory = join(CLAWD_DIR, 'MEMORY.md');
+    if (existsSync(mainMemory)) {
+      const stat = statSync(mainMemory);
+      files.push({
+        id: 'MEMORY.md',
+        name: 'MEMORY.md',
+        path: mainMemory,
+        type: 'core',
+        size: stat.size,
+        modifiedAt: stat.mtime.toISOString(),
+      });
+    }
+
+    // Memory directory files
+    if (existsSync(MEMORY_DIR)) {
+      for (const entry of readdirSync(MEMORY_DIR, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          // Scan subdirectories like reflections/
+          const subDir = join(MEMORY_DIR, entry.name);
+          for (const sub of readdirSync(subDir)) {
+            const fp = join(subDir, sub);
+            try {
+              const stat = statSync(fp);
+              files.push({
+                id: `${entry.name}/${sub}`,
+                name: sub,
+                path: fp,
+                type: entry.name,
+                size: stat.size,
+                modifiedAt: stat.mtime.toISOString(),
+              });
+            } catch {}
+          }
+        } else {
+          const fp = join(MEMORY_DIR, entry.name);
+          try {
+            const stat = statSync(fp);
+            // Categorize by filename pattern
+            let type = 'other';
+            if (entry.name.match(/^\d{4}-\d{2}-\d{2}/)) type = 'daily';
+            else if (entry.name === 'active-context.md') type = 'context';
+            else if (entry.name === 'cognitive-genome.md') type = 'genome';
+            else if (entry.name === 'identity.md') type = 'identity';
+            else if (entry.name.endsWith('.json')) type = 'data';
+            else if (entry.name.endsWith('.md')) type = 'document';
+
+            files.push({
+              id: entry.name,
+              name: entry.name,
+              path: fp,
+              type,
+              size: stat.size,
+              modifiedAt: stat.mtime.toISOString(),
+            });
+          } catch {}
+        }
+      }
+    }
+
+    // Sort: core first, then by modified date
+    files.sort((a, b) => {
+      if (a.type === 'core') return -1;
+      if (b.type === 'core') return 1;
+      return (b.modifiedAt || '').localeCompare(a.modifiedAt || '');
+    });
+
+    res.json({ files, total: files.length });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+app.get('/api/memory/:id', (req, res) => {
+  try {
+    // Handle nested paths like reflections/file.md
+    const id = req.params.id;
+    let filePath;
+
+    if (id === 'MEMORY.md') {
+      filePath = join(CLAWD_DIR, 'MEMORY.md');
+    } else {
+      filePath = join(MEMORY_DIR, id);
+    }
+
+    if (!existsSync(filePath)) return errorResponse(res, 404, 'not_found', 'Memory file not found');
+
+    const content = readFileSync(filePath, 'utf-8');
+    const stat = statSync(filePath);
+
+    res.json({
+      id,
+      content,
+      size: stat.size,
+      modifiedAt: stat.mtime.toISOString(),
+    });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+// Handle nested memory paths (e.g., reflections/file.md)
+app.get('/api/memory/:dir/:file', (req, res) => {
+  try {
+    const filePath = join(MEMORY_DIR, req.params.dir, req.params.file);
+    if (!existsSync(filePath)) return errorResponse(res, 404, 'not_found', 'Memory file not found');
+
+    const content = readFileSync(filePath, 'utf-8');
+    const stat = statSync(filePath);
+
+    res.json({
+      id: `${req.params.dir}/${req.params.file}`,
+      content,
+      size: stat.size,
+      modifiedAt: stat.mtime.toISOString(),
+    });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+
+// ── 4f. SYSTEM STATUS ──
+
+app.get('/api/system', async (req, res) => {
+  try {
+    const status = {
+      server: {
+        uptime: process.uptime(),
+        port: PORT,
+        wsClients: wss?.clients?.size || 0,
+        threads: readdirSync(THREADS_DIR).filter(f => f.endsWith('.json')).length,
+      },
+      gateway: null,
+      agents: [],
+    };
+
+    // Try to get gateway status
+    try {
+      const gwRes = await fetch(`${GATEWAY}/health`, { signal: AbortSignal.timeout(3000) });
+      if (gwRes.ok) {
+        status.gateway = await gwRes.json();
+      }
+    } catch {
+      status.gateway = { status: 'unreachable' };
+    }
+
+    // Discover agents
+    if (existsSync(AGENTS_DIR)) {
+      for (const entry of readdirSync(AGENTS_DIR, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const sessionsDir = join(AGENTS_DIR, entry.name, 'sessions');
+        const sessionCount = existsSync(sessionsDir) ?
+          readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl')).length : 0;
+        status.agents.push({ name: entry.name, sessions: sessionCount });
+      }
+    }
+
+    res.json(status);
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+
+// ══════════════════════════════════════════════
+// 5. STATIC FILE SERVING
 // ══════════════════════════════════════════════
 
 // Serve static assets from /public/
