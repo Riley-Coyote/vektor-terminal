@@ -2241,9 +2241,10 @@
   .sidebar-nav {
     display: flex;
     border-bottom: 1px solid var(--border);
-    padding: 0 6px;
+    padding: 0 2px;
     gap: 0;
     flex-shrink: 0;
+    overflow: visible;
   }
   .sidebar-nav-btn {
     flex: 1 1 0;
@@ -2251,9 +2252,9 @@
     background: none;
     border: none;
     color: var(--text-tertiary);
-    padding: 10px 0 8px;
+    padding: 10px 2px 8px;
     cursor: pointer;
-    font-size: 8.5px;
+    font-size: 8px;
     font-family: inherit;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -2264,6 +2265,8 @@
     align-items: center;
     gap: 2px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .sidebar-nav-btn:hover {
     color: var(--text-secondary);
@@ -2274,16 +2277,20 @@
     border-bottom-color: var(--accent);
   }
   .sidebar-nav-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     opacity: 0.7;
+    flex-shrink: 0;
   }
   .sidebar-nav-btn.active svg {
     opacity: 1;
   }
   .nav-label {
-    font-size: 8.5px;
+    font-size: 7.5px;
     line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
   .sidebar.collapsed .sidebar-nav {
     flex-direction: column;
@@ -2421,6 +2428,51 @@
   .browse-tag.anima { background: rgba(123, 143, 176, 0.12); color: #7b8fb0; }
   .browse-tag.enabled { background: rgba(100, 200, 100, 0.12); color: #6c6; }
   .browse-tag.disabled { background: rgba(200, 100, 100, 0.12); color: #c66; }
+
+  /* History items */
+  .history-date-header {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    padding: 14px 12px 6px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .history-item {
+    padding: 10px 12px;
+  }
+  .history-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .history-time {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+  .history-preview {
+    font-size: 11.5px;
+    color: var(--text-primary);
+    opacity: 0.75;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .history-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+  .history-meta span {
+    white-space: nowrap;
+  }
 
   /* Detail view in main area */
   .detail-view {
@@ -5576,6 +5628,20 @@ function setHistoryAgent(agent, btn) {
   if (ccCache.history) renderHistory(ccCache.history);
 }
 
+function cleanSessionPreview(raw) {
+  if (!raw) return '(empty session)';
+  return raw
+    .replace(/\[Chat messages since your last reply[^\]]*\]\s*/gi, '')
+    .replace(/\[Current message[^\]]*\]\s*/gi, '')
+    .replace(/^(User|Assistant|System):\s*/gi, '')
+    .replace(/^\[.*?\]\s*/g, '')
+    .replace(/\bAssistant:\s*/gi, '')
+    .replace(/\bUser:\s*/gi, '')
+    .replace(/\bSystem:\s*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim() || '(empty session)';
+}
+
 function renderHistory(data) {
   const search = ccFilters.historySearch.toLowerCase();
   let sessions = data.sessions;
@@ -5602,27 +5668,24 @@ function renderHistory(data) {
   for (const [date, items] of Object.entries(groups)) {
     const d = new Date(date + 'T00:00:00');
     const label = isNaN(d) ? date : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    html += `<div style="font-size:10px;color:var(--text-tertiary);padding:10px 12px 4px;letter-spacing:0.1em;text-transform:uppercase">${label}</div>`;
+    html += `<div class="history-date-header">${label}</div>`;
     for (const s of items) {
       const time = (s.timestamp || '').slice(11, 16) || '';
-      let preview = s.preview || '(empty session)';
-      // Clean up system noise from preview text
-      preview = preview
-        .replace(/\[Chat messages since your last reply[^\]]*\]\s*/gi, '')
-        .replace(/^(User|Assistant|System):\s*/i, '')
-        .replace(/^\[.*?\]\s*/g, '')
-        .trim() || '(empty session)';
+      const preview = cleanSessionPreview(s.preview);
+      const model = s.model ? s.model.split('/').pop().replace('claude-', '').replace('opus-4-6', 'opus').replace('sonnet-4', 'sonnet') : '';
+      const cost = s.totalCost > 0 ? `$${s.totalCost.toFixed(2)}` : '';
+
       html += `
-        <div class="browse-item" onclick="openSessionDetail('${s.agent}', '${s.id}')">
-          <div class="browse-item-title">
+        <div class="browse-item history-item" onclick="openSessionDetail('${s.agent}', '${s.id}')">
+          <div class="history-item-top">
             <span class="browse-tag ${s.agent}">${s.agent}</span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(preview.slice(0, 70))}${preview.length > 70 ? '…' : ''}</span>
+            <span class="history-time">${time}</span>
           </div>
-          <div class="browse-item-meta">
-            <span>${time}</span>
+          <div class="history-preview">${escapeHtml(preview.slice(0, 90))}</div>
+          <div class="history-meta">
             <span>${s.messageCount} msgs</span>
-            ${s.totalCost > 0 ? `<span>$${s.totalCost.toFixed(4)}</span>` : ''}
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.model ? s.model.split('/').pop() : ''}</span>
+            ${cost ? `<span>${cost}</span>` : ''}
+            ${model ? `<span>${model}</span>` : ''}
           </div>
         </div>
       `;
