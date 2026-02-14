@@ -130,11 +130,7 @@
     display: none;
   }
 
-  .sidebar-title .glyph {
-    font-size: 16px;
-    opacity: 0.9;
-    flex-shrink: 0;
-  }
+  /* (glyph moved to main header right side) */
 
   /* Collapse toggle button */
   .sidebar-collapse-btn {
@@ -487,9 +483,10 @@
   }
 
   .main-header-title {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 400;
     color: var(--text-secondary);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
   }
 
   /* Group header with participant glyphs */
@@ -513,11 +510,11 @@
     font-size: 10px;
   }
 
-  .main-header-model {
-    font-family: 'Geist Mono', monospace;
-    font-size: 10px;
-    color: var(--text-tertiary);
-    letter-spacing: 0.05em;
+  .main-header-glyph {
+    font-size: 18px;
+    color: var(--accent);
+    opacity: 0.7;
+    line-height: 1;
   }
 
   /* Messages area */
@@ -2247,7 +2244,7 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div class="sidebar-title">
-        <span class="glyph">⏀</span><span class="title-text"> VEKTOR</span>
+        <span class="title-text">VEKTOR</span>
       </div>
       <div class="new-thread-container">
         <button class="new-thread-btn" onclick="toggleNewThreadDropdown(event)" title="New thread">+</button>
@@ -2288,7 +2285,7 @@
   <div class="main">
     <div class="main-header">
       <span class="main-header-title" id="mainTitle">Select a thread</span>
-      <span class="main-header-model">claude-opus-4-6</span>
+      <span class="main-header-glyph">⏀</span>
     </div>
     <div class="messages" id="messages">
       <div class="empty-state">
@@ -2873,13 +2870,13 @@ function updateThreadHeader(thread) {
     const parts = thread.participants.map(pid => {
       const agent = AGENTS[pid];
       if (!agent) return '';
-      return `<span class="participant-tag"><span style="color:${agent.accent}">${agent.glyph}</span> <span style="color:${agent.accentDim}">${agent.name}</span></span>`;
+      return `<span class="participant-tag"><span style="color:${agent.accentDim}">${agent.name}</span></span>`;
     }).join('<span class="participant-separator">·</span>');
     
     titleEl.innerHTML = `<span class="main-header-participants">${parts}</span>`;
   } else {
     const agent = AGENTS[thread.agentId || 'main'] || AGENTS.main;
-    titleEl.innerHTML = `<span class="main-header-participants"><span class="participant-tag"><span style="color:${agent.accent}">${agent.glyph}</span> <span style="color:${agent.accentDim}">${agent.name}</span></span></span>`;
+    titleEl.innerHTML = `<span style="color:${agent.accentDim}">${thread.name || agent.name}</span>`;
   }
 }
 
