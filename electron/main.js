@@ -171,7 +171,7 @@ function createWindow() {
     title: '⏀ VEKTOR',
     titleBarStyle: 'hiddenInset', // Native macOS traffic lights
     trafficLightPosition: { x: 16, y: 16 },
-    backgroundColor: '#1a1d23',
+    transparent: true,
     vibrancy: 'under-window',
     visualEffectState: 'active',
     show: false, // Show after ready-to-show
@@ -342,6 +342,20 @@ function createMenu() {
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+// ── Single Instance Lock ──
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 }
 
 // ── App Lifecycle ──
