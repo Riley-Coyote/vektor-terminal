@@ -171,7 +171,9 @@ function createWindow() {
     title: '⏀ VEKTOR',
     titleBarStyle: 'hiddenInset', // Native macOS traffic lights
     trafficLightPosition: { x: 16, y: 16 },
-    backgroundColor: '#161616',
+    backgroundColor: '#1a1d23',
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
     show: false, // Show after ready-to-show
     webPreferences: {
       nodeIntegration: false,

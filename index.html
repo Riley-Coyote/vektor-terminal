@@ -37,25 +37,26 @@
   }
 
   :root {
-    --bg-primary: #161616;
-    --bg-secondary: #1c1c1c;
-    --bg-tertiary: #242424;
-    --bg-hover: #2a2a2a;
-    --border: #333;
-    --border-subtle: #282828;
-    --text-primary: #ececec;
-    --text-secondary: #9a9a9a;
-    --text-tertiary: #666;
+    --bg-primary: #1a1d23;
+    --bg-secondary: rgba(26, 30, 38, 0.82);
+    --bg-tertiary: rgba(255, 255, 255, 0.04);
+    --bg-hover: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --text-primary: #e4e6ea;
+    --text-secondary: #8b8f96;
+    --text-tertiary: #555963;
     --accent: #d4a574;
     --accent-dim: #8b6f4e;
     --accent-glow: rgba(212, 165, 116, 0.08);
-    --scrollbar-thumb: #333;
+    --scrollbar-thumb: rgba(255, 255, 255, 0.1);
     --scrollbar-track: transparent;
+    --user-bubble: rgba(255, 255, 255, 0.06);
   }
 
   html, body {
     height: 100%;
-    background: var(--bg-primary);
+    background: #1a1d23;
     color: var(--text-primary);
     font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     font-size: 14px;
@@ -82,6 +83,8 @@
     width: 260px;
     min-width: 260px;
     background: var(--bg-secondary);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -96,7 +99,6 @@
 
   .sidebar-header {
     padding: 20px 16px 12px;
-    border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -170,8 +172,8 @@
     width: 32px;
     height: 32px;
     border-radius: 6px;
-    background: var(--bg-tertiary);
-    border: 1px dashed var(--border);
+    background: none;
+    border: none;
     color: var(--text-tertiary);
     cursor: pointer;
     font-size: 16px;
@@ -183,8 +185,7 @@
 
   .collapsed-new-thread-btn:hover {
     background: var(--bg-hover);
-    color: var(--accent);
-    border-color: var(--accent-dim);
+    color: var(--text-primary);
   }
 
   .sidebar.collapsed .collapsed-new-thread-btn {
@@ -260,11 +261,11 @@
 
   .new-thread-btn {
     background: none;
-    border: 1px solid var(--border);
+    border: none;
     color: var(--text-secondary);
     width: 28px;
     height: 28px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -274,9 +275,8 @@
   }
 
   .new-thread-btn:hover {
-    background: var(--bg-tertiary);
+    background: var(--bg-hover);
     color: var(--text-primary);
-    border-color: var(--text-tertiary);
   }
 
   .new-thread-dropdown {
@@ -284,13 +284,15 @@
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
-    background: var(--bg-secondary);
+    background: rgba(30, 34, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 4px;
     min-width: 200px;
     z-index: 100;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     animation: dropdownIn 0.12s ease-out;
   }
 
@@ -373,12 +375,7 @@
   }
 
   .thread-item.active {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
-  }
-
-  .thread-item:not(.active) {
-    border: 1px solid transparent;
+    background: var(--bg-hover);
   }
 
   .thread-name {
@@ -450,7 +447,6 @@
   /* Sidebar footer */
   .sidebar-footer {
     padding: 12px 16px;
-    border-top: 1px solid var(--border-subtle);
     font-family: 'Geist Mono', monospace;
     font-size: 10px;
     color: var(--text-tertiary);
@@ -477,13 +473,12 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: var(--bg-primary);
+    background: #1a1d23;
     min-width: 0;
   }
 
   .main-header {
     padding: 14px 24px;
-    border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -542,6 +537,12 @@
     gap: 14px;
     animation: fadeIn 0.2s ease-out;
     position: relative;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  .message.user {
+    background: var(--user-bubble);
   }
 
   @keyframes fadeIn {
@@ -563,26 +564,22 @@
 
   .message.user .message-avatar {
     background: var(--bg-tertiary);
-    border: 1px solid var(--border);
     color: var(--text-secondary);
   }
 
   .message.assistant .message-avatar {
     background: var(--accent-glow);
-    border: 1px solid var(--accent-dim);
     color: var(--accent);
   }
 
   /* Agent-specific avatar colors for group chat */
   .message.assistant.agent-main .message-avatar {
     background: rgba(212, 165, 116, 0.08);
-    border-color: #8b6f4e;
     color: #d4a574;
   }
 
   .message.assistant.agent-anima .message-avatar {
     background: rgba(123, 143, 176, 0.08);
-    border-color: #556b8a;
     color: #7b8fb0;
   }
 
@@ -640,14 +637,15 @@
     display: flex;
     gap: 2px;
     padding: 3px 4px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    background: rgba(30, 34, 42, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 8px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
 
   .message:hover .message-actions {
@@ -709,11 +707,10 @@
   /* Inline code */
   .message-text code:not(.hljs):not(.code-block-code) {
     font-family: 'Geist Mono', monospace;
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.07);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 12.5px;
-    border: 1px solid var(--border-subtle);
     color: var(--accent);
   }
 
@@ -723,10 +720,9 @@
   .code-block-wrapper {
     position: relative;
     margin: 12px 0;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    border-radius: 10px;
     overflow: hidden;
-    background: #111111;
+    background: rgba(0, 0, 0, 0.25);
   }
 
   .code-block-header {
@@ -734,8 +730,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 12px;
-    background: #151515;
-    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(0, 0, 0, 0.15);
     min-height: 36px;
   }
 
@@ -952,8 +947,8 @@
   .message-text .table-wrapper {
     overflow-x: auto;
     margin: 12px 0;
-    border-radius: 6px;
-    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.15);
   }
 
   .message-text table {
@@ -967,17 +962,17 @@
   .message-text th {
     text-align: left;
     padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     color: var(--text-primary);
     font-weight: 600;
-    background: var(--bg-tertiary);
+    background: rgba(0, 0, 0, 0.1);
     font-size: 12px;
     letter-spacing: 0.03em;
   }
 
   .message-text td {
     padding: 6px 12px;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     color: var(--text-secondary);
   }
 
@@ -1030,7 +1025,6 @@
   /* ═══════════════════════════════════════════ */
   .input-area {
     padding: 16px 24px 20px;
-    border-top: 1px solid var(--border-subtle);
   }
 
   .input-wrapper {
@@ -1044,9 +1038,9 @@
 
   .input-box {
     flex: 1;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
     padding: 12px 16px;
     padding-bottom: 12px;
     color: var(--text-primary);
@@ -1057,11 +1051,11 @@
     min-height: 44px;
     max-height: 200px;
     line-height: 1.5;
-    transition: border-color 0.15s;
+    transition: border-color 0.2s;
   }
 
   .input-box:focus {
-    border-color: var(--accent-dim);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   .input-box::placeholder {
@@ -1093,12 +1087,12 @@
   }
 
   .send-btn {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.06);
+    border: none;
     color: var(--text-secondary);
     width: 44px;
     height: 44px;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1109,9 +1103,8 @@
   }
 
   .send-btn:hover:not(:disabled) {
-    background: var(--accent-glow);
-    border-color: var(--accent-dim);
-    color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
   }
 
   .send-btn:disabled {
@@ -1121,8 +1114,7 @@
 
   /* Stop generation button */
   .send-btn.stop-btn {
-    background: rgba(204, 68, 68, 0.1);
-    border-color: #c44;
+    background: rgba(204, 68, 68, 0.12);
     color: #c44;
     opacity: 1;
   }
@@ -1190,8 +1182,9 @@
   }
 
   .toast {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: rgba(30, 34, 42, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     color: var(--text-primary);
     padding: 8px 16px;
     border-radius: 8px;
@@ -1217,8 +1210,8 @@
   /* Edit Message Textarea                       */
   /* ═══════════════════════════════════════════ */
   .edit-message-area {
-    background: var(--bg-secondary);
-    border: 1px solid var(--accent-dim);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
     font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     font-size: 14px;
@@ -1239,8 +1232,8 @@
   }
 
   .edit-msg-btn {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.06);
+    border: none;
     color: var(--text-secondary);
     padding: 5px 14px;
     border-radius: 6px;
@@ -1253,11 +1246,10 @@
 
   .edit-msg-btn:hover {
     color: var(--text-primary);
-    background: var(--bg-hover);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .edit-msg-btn.save {
-    border-color: var(--accent-dim);
     color: var(--accent);
   }
 
@@ -1280,9 +1272,11 @@
   }
 
   .confirm-dialog {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background: rgba(30, 34, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     padding: 20px 24px;
     max-width: 340px;
     width: 90%;
@@ -1316,16 +1310,16 @@
     font-size: 12px;
     font-family: 'Geist Mono', monospace;
     transition: all 0.15s;
-    border: 1px solid var(--border);
+    border: none;
   }
 
   .confirm-dialog .confirm-btn.cancel {
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text-secondary);
   }
 
   .confirm-dialog .confirm-btn.cancel:hover {
-    background: var(--bg-hover);
+    background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
   }
 
@@ -1398,13 +1392,12 @@
     position: relative;
     border-radius: 8px;
     overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--bg-secondary);
-    transition: border-color 0.15s;
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.15s;
   }
 
   .attachment-item:hover {
-    border-color: var(--accent-dim);
+    background: rgba(255, 255, 255, 0.07);
   }
 
   .attachment-item.image {
@@ -1458,8 +1451,8 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
+    background: rgba(30, 34, 42, 0.9);
+    border: none;
     color: var(--text-secondary);
     font-size: 12px;
     cursor: pointer;
@@ -1528,8 +1521,8 @@
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    border: none;
     border-radius: 6px;
     font-size: 12px;
     color: var(--text-secondary);
@@ -1654,11 +1647,12 @@
   /* Canvas Header */
   .canvas-header {
     padding: 0;
-    border-bottom: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    background: var(--bg-secondary);
+    background: rgba(26, 30, 38, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   .canvas-header-top {
@@ -1697,7 +1691,6 @@
     letter-spacing: 0.08em;
     color: var(--accent-dim);
     background: var(--accent-glow);
-    border: 1px solid rgba(212, 165, 116, 0.15);
     padding: 2px 6px;
     border-radius: 3px;
     text-transform: uppercase;
@@ -1712,7 +1705,7 @@
 
   .canvas-artifact-btn {
     background: none;
-    border: 1px solid var(--border);
+    border: none;
     color: var(--text-secondary);
     padding: 3px 8px;
     border-radius: 4px;
@@ -1735,14 +1728,16 @@
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    background: rgba(30, 34, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
     padding: 4px;
     min-width: 200px;
     max-width: 300px;
     z-index: 100;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     animation: dropdownIn 0.12s ease-out;
     max-height: 240px;
     overflow-y: auto;
@@ -1909,7 +1904,7 @@
     font-weight: 600;
     margin: 0 0 16px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     color: var(--text-primary);
   }
 
@@ -1955,16 +1950,14 @@
 
   .canvas-markdown code {
     font-family: 'Geist Mono', monospace;
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.06);
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 12px;
-    border: 1px solid var(--border-subtle);
   }
 
   .canvas-markdown pre {
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     padding: 14px 16px;
     margin: 12px 0;
@@ -1992,7 +1985,7 @@
 
   .canvas-markdown hr {
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin: 20px 0;
   }
 
@@ -2093,8 +2086,10 @@
     right: 0;
     width: 220px;
     height: 100%;
-    background: var(--bg-primary);
-    border-left: 1px solid var(--border);
+    background: rgba(26, 29, 35, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
     z-index: 20;
     flex-direction: column;
     animation: slideInRight 0.2s ease-out;
@@ -2112,7 +2107,7 @@
 
   .canvas-version-header {
     padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
