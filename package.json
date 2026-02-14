@@ -1,0 +1,71 @@
+{
+  "name": "vektor-terminal",
+  "version": "1.0.0",
+  "description": "⏀ Vektor Terminal — Native interface for Clawdbot",
+  "main": "electron/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"node server.mjs\" \"sleep 2 && electron .\"",
+    "build": "electron-builder --mac",
+    "build:dmg": "electron-builder --mac dmg",
+    "build:dir": "electron-builder --mac dir",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.vektor.terminal",
+    "productName": "Vektor",
+    "copyright": "Copyright © 2026",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] }
+      ],
+      "icon": "build/icon.icns",
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "Vektor",
+      "backgroundColor": "#161616",
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "files": [
+      "electron/**/*",
+      "server.mjs",
+      "index.html",
+      "public/**/*",
+      "data/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "data/",
+        "to": "data/",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": false
+  },
+  "keywords": ["vektor", "terminal", "clawdbot", "ai"],
+  "author": "Riley Coyote",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
+    "uuid": "^13.0.0",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "electron": "^34.3.0",
+    "electron-builder": "^25.1.8",
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,0 +1,4943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏀ VEKTOR</title>
+<!-- highlight.js for code syntax highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Electron: make sidebar header draggable for native window controls */
+  .electron-app .sidebar-header {
+    -webkit-app-region: drag;
+    padding-top: 28px;
+  }
+  .electron-app .sidebar-header button,
+  .electron-app .sidebar-header .new-thread-btn {
+    -webkit-app-region: no-drag;
+  }
+
+  :root {
+    --bg-primary: #161616;
+    --bg-secondary: #1c1c1c;
+    --bg-tertiary: #242424;
+    --bg-hover: #2a2a2a;
+    --border: #333;
+    --border-subtle: #282828;
+    --text-primary: #ececec;
+    --text-secondary: #9a9a9a;
+    --text-tertiary: #666;
+    --accent: #d4a574;
+    --accent-dim: #8b6f4e;
+    --accent-glow: rgba(212, 165, 116, 0.08);
+    --scrollbar-thumb: #333;
+    --scrollbar-track: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+  /* Layout */
+  .app {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar.collapsed {
+    width: 52px;
+    min-width: 52px;
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar.collapsed .sidebar-header {
+    padding: 16px 8px 12px;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar-title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .sidebar.collapsed .sidebar-title .title-text {
+    display: none;
+  }
+
+  .sidebar-title .glyph {
+    font-size: 16px;
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+
+  /* Collapse toggle button */
+  .sidebar-collapse-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  .sidebar-collapse-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .sidebar.collapsed .sidebar-collapse-btn {
+    transform: rotate(180deg);
+  }
+
+  .sidebar.collapsed .new-thread-container {
+    display: none;
+  }
+
+  /* Collapsed new thread button at bottom of thread list */
+  .collapsed-new-thread-btn {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+    border: 1px dashed var(--border);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 16px;
+    align-items: center;
+    justify-content: center;
+    margin: 4px auto;
+    transition: all 0.15s;
+  }
+
+  .collapsed-new-thread-btn:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  .sidebar.collapsed .collapsed-new-thread-btn {
+    display: flex;
+  }
+
+  /* Collapsed thread items */
+  .sidebar.collapsed .thread-list {
+    padding: 4px;
+  }
+
+  .sidebar.collapsed .thread-item {
+    padding: 8px;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .sidebar.collapsed .thread-info {
+    display: none;
+  }
+
+  .sidebar.collapsed .thread-actions {
+    display: none !important;
+  }
+
+  .thread-icon {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .sidebar.collapsed .thread-icon {
+    display: flex;
+  }
+
+  .thread-item.active .thread-icon {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* Collapsed footer */
+  .sidebar.collapsed .sidebar-footer {
+    padding: 12px 4px;
+    text-align: center;
+    font-size: 0;
+  }
+
+  .sidebar.collapsed .sidebar-footer .status-dot {
+    margin-right: 0;
+  }
+
+  .sidebar.collapsed .sidebar-footer .footer-text {
+    display: none;
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* New Thread Dropdown                         */
+  /* ═══════════════════════════════════════════ */
+  .new-thread-container {
+    position: relative;
+  }
+
+  .new-thread-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+
+  .new-thread-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--text-tertiary);
+  }
+
+  .new-thread-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    min-width: 200px;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: dropdownIn 0.12s ease-out;
+  }
+
+  .new-thread-dropdown.open {
+    display: block;
+  }
+
+  @keyframes dropdownIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .new-thread-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12.5px;
+    transition: all 0.12s;
+  }
+
+  .new-thread-option:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .new-thread-option .option-glyph {
+    font-size: 14px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .new-thread-option .option-glyph.amber { color: var(--accent); }
+  .new-thread-option .option-glyph.blue-slate { color: #7b8fb0; }
+  .new-thread-option .option-glyph.dual { 
+    color: var(--text-tertiary);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .new-thread-option .option-label {
+    font-weight: 500;
+  }
+
+  .new-thread-option .option-desc {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 1px;
+  }
+
+  .thread-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .thread-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.12s;
+    margin-bottom: 2px;
+    position: relative;
+  }
+
+  .thread-item:hover {
+    background: var(--bg-hover);
+  }
+
+  .thread-item.active {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+  }
+
+  .thread-item:not(.active) {
+    border: 1px solid transparent;
+  }
+
+  .thread-name {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  .thread-item.active .thread-name {
+    color: var(--text-primary);
+  }
+
+  /* Group thread indicator */
+  .thread-mode-badge {
+    font-size: 10px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    font-family: 'Geist Mono', monospace;
+  }
+
+  .thread-actions {
+    display: none;
+    gap: 4px;
+    margin-left: 8px;
+  }
+
+  .thread-item:hover .thread-actions {
+    display: flex;
+  }
+
+  .thread-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: all 0.12s;
+  }
+
+  .thread-action-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .thread-action-btn.delete:hover {
+    color: #c44;
+  }
+
+  .thread-meta {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  .thread-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Sidebar footer */
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4a7;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Main area */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    min-width: 0;
+  }
+
+  .main-header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+  }
+
+  .main-header-title {
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  /* Group header with participant glyphs */
+  .main-header-participants {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  .participant-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .participant-separator {
+    color: var(--text-tertiary);
+    font-size: 10px;
+  }
+
+  .main-header-model {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
+  }
+
+  /* Messages area */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .message {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    gap: 14px;
+    animation: fadeIn 0.2s ease-out;
+    position: relative;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .message.user .message-avatar {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .message.assistant .message-avatar {
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* Agent-specific avatar colors for group chat */
+  .message.assistant.agent-main .message-avatar {
+    background: rgba(212, 165, 116, 0.08);
+    border-color: #8b6f4e;
+    color: #d4a574;
+  }
+
+  .message.assistant.agent-anima .message-avatar {
+    background: rgba(123, 143, 176, 0.08);
+    border-color: #556b8a;
+    color: #7b8fb0;
+  }
+
+  .message-content {
+    flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .message-role {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .message.user .message-role { color: var(--text-tertiary); }
+  .message.assistant .message-role { color: var(--accent-dim); }
+
+  /* Agent-specific role colors */
+  .message.assistant.agent-main .message-role { color: #8b6f4e; }
+  .message.assistant.agent-anima .message-role { color: #556b8a; }
+
+  /* ═══════════════════════════════════════════ */
+  /* Message Timestamp (hover-reveal)            */
+  /* ═══════════════════════════════════════════ */
+  .message-timestamp {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.03em;
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    user-select: none;
+  }
+
+  .message:hover .message-timestamp {
+    opacity: 1;
+  }
+
+  .message-role-row {
+    display: flex;
+    align-items: center;
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Message Actions (hover bar)                 */
+  /* ═══════════════════════════════════════════ */
+  .message-actions {
+    position: absolute;
+    top: -8px;
+    right: 0;
+    display: flex;
+    gap: 2px;
+    padding: 3px 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .message:hover .message-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .msg-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.12s;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .msg-action-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .msg-action-btn.delete:hover {
+    color: #c44;
+  }
+
+  .msg-action-btn svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Message Text & Markdown Rendering           */
+  /* ═══════════════════════════════════════════ */
+  .message-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-weight: 400;
+  }
+
+  .message-text p { margin-bottom: 12px; }
+  .message-text p:last-child { margin-bottom: 0; }
+
+  /* Inline code */
+  .message-text code:not(.hljs):not(.code-block-code) {
+    font-family: 'Geist Mono', monospace;
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    border: 1px solid var(--border-subtle);
+    color: var(--accent);
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Code Blocks (World-Class)                   */
+  /* ═══════════════════════════════════════════ */
+  .code-block-wrapper {
+    position: relative;
+    margin: 12px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #111111;
+  }
+
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #151515;
+    border-bottom: 1px solid var(--border-subtle);
+    min-height: 36px;
+  }
+
+  .code-block-lang {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .code-block-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .code-action-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-tertiary);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Geist Mono', monospace;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  .code-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  .code-action-btn.copied {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  .code-action-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .code-block-body {
+    display: flex;
+    max-height: 480px;
+    overflow: auto;
+  }
+
+  .code-block-body::-webkit-scrollbar { width: 6px; height: 6px; }
+  .code-block-body::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+  /* Line numbers gutter */
+  .code-line-numbers {
+    padding: 14px 0;
+    text-align: right;
+    user-select: none;
+    color: #3a3f47;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    min-width: 40px;
+    padding-right: 12px;
+    padding-left: 12px;
+    border-right: 1px solid #1a1f27;
+    flex-shrink: 0;
+  }
+
+  .code-line-numbers span {
+    display: block;
+  }
+
+  .code-block-code {
+    flex: 1;
+    margin: 0;
+    padding: 14px 16px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: transparent !important;
+    border: none;
+    overflow: visible;
+    white-space: pre;
+    color: var(--text-primary);
+  }
+
+  .code-block-code code {
+    font-family: 'Geist Mono', monospace;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* Override highlight.js theme to match our dark aesthetic */
+  .code-block-code .hljs { background: transparent !important; color: #cccccc; padding: 0; }
+  .code-block-code .hljs-keyword { color: #d4a574; }
+  .code-block-code .hljs-string { color: #a5d6a7; }
+  .code-block-code .hljs-number { color: #e6b07c; }
+  .code-block-code .hljs-comment { color: #546e7a; font-style: italic; }
+  .code-block-code .hljs-function { color: #c9d1d9; }
+  .code-block-code .hljs-title { color: #e0c097; }
+  .code-block-code .hljs-title.function_ { color: #e0c097; }
+  .code-block-code .hljs-params { color: #c9d1d9; }
+  .code-block-code .hljs-built_in { color: #b8937a; }
+  .code-block-code .hljs-literal { color: #e6b07c; }
+  .code-block-code .hljs-type { color: #c4a882; }
+  .code-block-code .hljs-attr { color: #d4a574; }
+  .code-block-code .hljs-property { color: #c9d1d9; }
+  .code-block-code .hljs-variable { color: #c9d1d9; }
+  .code-block-code .hljs-variable.language_ { color: #d4a574; }
+  .code-block-code .hljs-operator { color: #e6b07c; }
+  .code-block-code .hljs-punctuation { color: #6a737d; }
+  .code-block-code .hljs-meta { color: #8b6f4e; }
+  .code-block-code .hljs-meta .hljs-keyword { color: #8b6f4e; }
+  .code-block-code .hljs-regexp { color: #a5d6a7; }
+  .code-block-code .hljs-selector-tag { color: #d4a574; }
+  .code-block-code .hljs-selector-class { color: #e0c097; }
+  .code-block-code .hljs-selector-id { color: #e0c097; }
+  .code-block-code .hljs-tag { color: #d4a574; }
+  .code-block-code .hljs-name { color: #d4a574; }
+  .code-block-code .hljs-attribute { color: #e0c097; }
+  .code-block-code .hljs-symbol { color: #e6b07c; }
+  .code-block-code .hljs-bullet { color: #d4a574; }
+  .code-block-code .hljs-addition { color: #a5d6a7; }
+  .code-block-code .hljs-deletion { color: #c44; }
+  .code-block-code .hljs-section { color: #e0c097; font-weight: 600; }
+  .code-block-code .hljs-emphasis { font-style: italic; }
+  .code-block-code .hljs-strong { font-weight: 700; }
+
+  /* Remove old pre styling — code blocks are now wrapped */
+  .message-text pre {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .message-text pre code {
+    font-family: 'Geist Mono', monospace;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .message-text strong { color: var(--text-primary); font-weight: 600; }
+  .message-text em { color: var(--text-secondary); font-style: italic; }
+  .message-text del { color: var(--text-tertiary); text-decoration: line-through; }
+
+  .message-text ul, .message-text ol {
+    margin: 8px 0;
+    padding-left: 24px;
+  }
+
+  .message-text li { margin-bottom: 4px; line-height: 1.6; }
+  .message-text li ul, .message-text li ol { margin: 4px 0; }
+
+  /* Task list checkboxes */
+  .message-text li.task-item {
+    list-style: none;
+    margin-left: -24px;
+    padding-left: 4px;
+  }
+
+  .message-text li.task-item input[type="checkbox"] {
+    margin-right: 8px;
+    accent-color: var(--accent);
+    vertical-align: middle;
+  }
+
+  .message-text blockquote {
+    border-left: 3px solid var(--accent-dim);
+    padding: 8px 14px;
+    margin: 10px 0;
+    color: var(--text-secondary);
+    background: rgba(212, 165, 116, 0.03);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .message-text blockquote blockquote {
+    margin: 8px 0;
+    border-left-color: var(--border);
+  }
+
+  .message-text h1, .message-text h2, .message-text h3, .message-text h4, .message-text h5, .message-text h6 {
+    margin: 16px 0 8px;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .message-text h1 { font-size: 18px; font-weight: 600; }
+  .message-text h2 { font-size: 16px; font-weight: 600; }
+  .message-text h3 { font-size: 15px; color: var(--accent); font-weight: 500; }
+  .message-text h4 { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+  .message-text h5 { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+  .message-text h6 { font-size: 12px; color: var(--text-tertiary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Tables */
+  .message-text .table-wrapper {
+    overflow-x: auto;
+    margin: 12px 0;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .message-text table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+  }
+
+  .message-text th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-weight: 600;
+    background: var(--bg-tertiary);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+
+  .message-text td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+  }
+
+  .message-text tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.015);
+  }
+
+  .message-text tr:last-child td {
+    border-bottom: none;
+  }
+
+  .message-text a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .message-text a:hover { text-decoration: underline; }
+
+  .message-text hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  .message-text img:not(.message-image) {
+    max-width: 100%;
+    border-radius: 6px;
+    margin: 8px 0;
+    display: block;
+  }
+
+  /* Streaming cursor */
+  .streaming-cursor::after {
+    content: '▊';
+    animation: blink 0.8s infinite;
+    color: var(--accent);
+    margin-left: 2px;
+  }
+
+  /* Agent-specific streaming cursors */
+  .streaming-cursor.cursor-main::after { color: #d4a574; }
+  .streaming-cursor.cursor-anima::after { color: #7b8fb0; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Input area                                  */
+  /* ═══════════════════════════════════════════ */
+  .input-area {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .input-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    position: relative;
+  }
+
+  .input-box {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    padding-bottom: 12px;
+    color: var(--text-primary);
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    min-height: 44px;
+    max-height: 200px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+
+  .input-box:focus {
+    border-color: var(--accent-dim);
+  }
+
+  .input-box::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  /* Character count — positioned over bottom-right of textarea */
+  .char-count {
+    position: absolute;
+    bottom: 8px;
+    right: 62px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    letter-spacing: 0.03em;
+    z-index: 1;
+  }
+
+  .char-count.visible {
+    opacity: 0.6;
+  }
+
+  .char-count.warn {
+    color: #c44;
+    opacity: 1;
+  }
+
+  .send-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover:not(:disabled) {
+    background: var(--accent-glow);
+    border-color: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .send-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Stop generation button */
+  .send-btn.stop-btn {
+    background: rgba(204, 68, 68, 0.1);
+    border-color: #c44;
+    color: #c44;
+    opacity: 1;
+  }
+
+  .send-btn.stop-btn:hover {
+    background: rgba(204, 68, 68, 0.2);
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Typing Indicator                            */
+  /* ═══════════════════════════════════════════ */
+  .typing-indicator {
+    display: none;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 0 8px 0;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.03em;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .typing-indicator.active {
+    display: flex;
+  }
+
+  .typing-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .typing-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    animation: typingDot 1.4s ease-in-out infinite;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingDot {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-2px); }
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Toast Notification                          */
+  /* ═══════════════════════════════════════════ */
+  .toast-container {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.03em;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: toastIn 0.2s ease-out, toastOut 0.2s ease-in 1.8s forwards;
+    pointer-events: auto;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toastOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Edit Message Textarea                       */
+  /* ═══════════════════════════════════════════ */
+  .edit-message-area {
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-dim);
+    color: var(--text-primary);
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 10px 14px;
+    border-radius: 8px;
+    width: 100%;
+    min-height: 60px;
+    max-height: 300px;
+    resize: vertical;
+    outline: none;
+  }
+
+  .edit-message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .edit-msg-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Geist Mono', monospace;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .edit-msg-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .edit-msg-btn.save {
+    border-color: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .edit-msg-btn.save:hover {
+    background: var(--accent-glow);
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Delete Confirmation                         */
+  /* ═══════════════════════════════════════════ */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s;
+  }
+
+  .confirm-dialog {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .confirm-dialog h3 {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .confirm-dialog p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .confirm-dialog .confirm-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .confirm-dialog .confirm-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Geist Mono', monospace;
+    transition: all 0.15s;
+    border: 1px solid var(--border);
+  }
+
+  .confirm-dialog .confirm-btn.cancel {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+
+  .confirm-dialog .confirm-btn.cancel:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .confirm-dialog .confirm-btn.danger {
+    background: rgba(204, 68, 68, 0.1);
+    border-color: #c44;
+    color: #c44;
+  }
+
+  .confirm-dialog .confirm-btn.danger:hover {
+    background: rgba(204, 68, 68, 0.2);
+  }
+
+  /* Upload & Attachments */
+  .input-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 0 8px 0;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .upload-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-tertiary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .upload-btn:hover {
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    border-color: var(--border-subtle);
+  }
+
+  .upload-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .attachment-preview {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .attachment-preview.has-items {
+    display: flex;
+  }
+
+  .attachment-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    transition: border-color 0.15s;
+  }
+
+  .attachment-item:hover {
+    border-color: var(--accent-dim);
+  }
+
+  .attachment-item.image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .attachment-item.image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .attachment-item.file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    max-width: 220px;
+  }
+
+  .attachment-file-icon {
+    font-size: 16px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  .attachment-file-info {
+    overflow: hidden;
+  }
+
+  .attachment-file-name {
+    font-size: 12px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .attachment-file-size {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-family: 'Geist Mono', monospace;
+  }
+
+  .attachment-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    z-index: 2;
+  }
+
+  .attachment-remove:hover {
+    background: #c44;
+    color: #fff;
+    border-color: #c44;
+  }
+
+  /* Drag & drop overlay */
+  .drop-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(22, 22, 22, 0.9);
+    border: 2px dashed var(--accent-dim);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+  }
+
+  .drop-overlay.active {
+    display: flex;
+  }
+
+  .drop-overlay-icon {
+    font-size: 48px;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+
+  .drop-overlay-text {
+    font-size: 16px;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  /* Inline images in messages */
+  .message-image {
+    max-width: 400px;
+    max-height: 400px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    margin: 8px 0;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    display: block;
+  }
+
+  .message-image:hover {
+    opacity: 0.85;
+  }
+
+  .message-file-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 4px 0;
+    font-family: 'Geist Mono', monospace;
+  }
+
+  .message-file-badge svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+  }
+
+  /* Image lightbox */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.9);
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+
+  .lightbox.active {
+    display: flex;
+  }
+
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 4px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    gap: 12px;
+  }
+
+  .empty-glyph {
+    font-size: 48px;
+    opacity: 0.15;
+    color: var(--accent);
+  }
+
+  .empty-text {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  /* Rename input */
+  .rename-input {
+    background: var(--bg-primary);
+    border: 1px solid var(--accent-dim);
+    color: var(--text-primary);
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 13px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    outline: none;
+    width: 100%;
+  }
+
+  /* ═══════════════════════════════════════════ */
+  /* Canvas Panel                                */
+  /* ═══════════════════════════════════════════ */
+
+  /* Resize handle between chat and canvas */
+  .canvas-resize-handle {
+    width: 4px;
+    cursor: col-resize;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.15s;
+    position: relative;
+    z-index: 5;
+    display: none;
+  }
+
+  .canvas-resize-handle:hover,
+  .canvas-resize-handle.dragging {
+    background: var(--accent-dim);
+  }
+
+  .canvas-resize-handle.visible {
+    display: block;
+  }
+
+  .canvas-panel {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .canvas-panel.open {
+    width: 50%;
+    min-width: 300px;
+    max-width: 70%;
+    opacity: 1;
+  }
+
+  .canvas-panel.no-transition {
+    transition: none;
+  }
+
+  /* Canvas Header */
+  .canvas-header {
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+  }
+
+  .canvas-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    min-height: 48px;
+    gap: 8px;
+  }
+
+  .canvas-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .canvas-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .canvas-lang-tag {
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--accent-dim);
+    background: var(--accent-glow);
+    border: 1px solid rgba(212, 165, 116, 0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* Artifact selector dropdown */
+  .canvas-artifact-select {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .canvas-artifact-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Geist Mono', monospace;
+    transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .canvas-artifact-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .canvas-artifact-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+    min-width: 200px;
+    max-width: 300px;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: dropdownIn 0.12s ease-out;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .canvas-artifact-dropdown.open {
+    display: block;
+  }
+
+  .canvas-artifact-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    transition: all 0.1s;
+  }
+
+  .canvas-artifact-option:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .canvas-artifact-option.active {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid rgba(212, 165, 116, 0.15);
+  }
+
+  .canvas-artifact-option:not(.active) {
+    border: 1px solid transparent;
+  }
+
+  .canvas-artifact-option-icon {
+    font-size: 11px;
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+  }
+
+  .canvas-artifact-option-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  .canvas-header-actions {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .canvas-action-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-tertiary);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.12s;
+    position: relative;
+  }
+
+  .canvas-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  .canvas-action-btn.close:hover {
+    color: #c44;
+    border-color: rgba(204, 68, 68, 0.3);
+  }
+
+  .canvas-action-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Native title tooltips are used instead of CSS pseudo-elements */
+
+  /* Tab bar */
+  .canvas-tab-bar {
+    display: flex;
+    padding: 0 16px;
+    gap: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .canvas-view-tab {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-tertiary);
+    transition: all 0.12s;
+    margin-bottom: -1px;
+  }
+
+  .canvas-view-tab:hover {
+    color: var(--text-secondary);
+  }
+
+  .canvas-view-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Canvas Body */
+  .canvas-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0;
+  }
+
+  .canvas-body-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .canvas-body-iframe {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* Markdown canvas view */
+  .canvas-markdown {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-primary);
+  }
+
+  .canvas-markdown h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .canvas-markdown h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 10px;
+    color: var(--text-primary);
+  }
+
+  .canvas-markdown h3 {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 20px 0 8px;
+    color: var(--accent);
+  }
+
+  .canvas-markdown h4 {
+    font-size: 13px;
+    font-weight: 500;
+    margin: 16px 0 6px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .canvas-markdown p {
+    margin-bottom: 12px;
+  }
+
+  .canvas-markdown p:last-child {
+    margin-bottom: 0;
+  }
+
+  .canvas-markdown ul, .canvas-markdown ol {
+    margin: 8px 0 12px;
+    padding-left: 24px;
+  }
+
+  .canvas-markdown li {
+    margin-bottom: 4px;
+  }
+
+  .canvas-markdown code {
+    font-family: 'Geist Mono', monospace;
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .canvas-markdown pre {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .canvas-markdown pre code {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  .canvas-markdown strong { color: var(--text-primary); font-weight: 600; }
+  .canvas-markdown em { color: var(--text-secondary); }
+
+  .canvas-markdown blockquote {
+    border-left: 3px solid var(--accent-dim);
+    padding-left: 14px;
+    margin: 12px 0;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .canvas-markdown hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .canvas-markdown table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+
+  .canvas-markdown th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-weight: 600;
+    background: var(--bg-tertiary);
+  }
+
+  .canvas-markdown td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+  }
+
+  .canvas-markdown tr:last-child td {
+    border-bottom: none;
+  }
+
+  .canvas-markdown a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .canvas-markdown a:hover {
+    text-decoration: underline;
+  }
+
+  .canvas-markdown img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin: 8px 0;
+  }
+
+  .canvas-markdown li.task-item {
+    list-style: none;
+    margin-left: -20px;
+  }
+
+  .canvas-markdown li.task-item input[type="checkbox"] {
+    margin-right: 8px;
+    accent-color: var(--accent);
+  }
+
+  /* HTML preview iframe */
+  .canvas-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #1c1c1c;
+    border-radius: 0;
+  }
+
+  /* Code view in canvas */
+  .canvas-code-view {
+    background: #111111;
+    border-radius: 6px;
+    overflow: auto;
+    height: 100%;
+    margin: 0;
+  }
+
+  .canvas-code-view pre {
+    margin: 0;
+    padding: 16px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: transparent !important;
+    color: #c9d1d9;
+    white-space: pre;
+  }
+
+  .canvas-code-view pre code {
+    font-family: 'Geist Mono', monospace;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* Version history panel */
+  .canvas-version-panel {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 220px;
+    height: 100%;
+    background: var(--bg-primary);
+    border-left: 1px solid var(--border);
+    z-index: 20;
+    flex-direction: column;
+    animation: slideInRight 0.2s ease-out;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .canvas-version-panel.open {
+    display: flex;
+  }
+
+  @keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .canvas-version-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .canvas-version-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .canvas-version-close {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: color 0.12s;
+  }
+
+  .canvas-version-close:hover {
+    color: var(--text-primary);
+  }
+
+  .canvas-version-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .canvas-version-item {
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    transition: all 0.1s;
+    margin-bottom: 4px;
+  }
+
+  .canvas-version-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .canvas-version-item.active {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-color: rgba(212, 165, 116, 0.15);
+  }
+
+  .canvas-version-item-time {
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Canvas empty state */
+  .canvas-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-tertiary);
+    gap: 10px;
+  }
+
+  .canvas-empty-icon {
+    font-size: 32px;
+    opacity: 0.15;
+    color: var(--accent);
+  }
+
+  .canvas-empty-text {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Canvas footer — version count */
+  .canvas-footer {
+    padding: 6px 16px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'Geist Mono', monospace;
+    font-size: 9px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  /* Prevent text selection during resize */
+  .resizing {
+    user-select: none !important;
+    cursor: col-resize !important;
+  }
+
+  .resizing iframe {
+    pointer-events: none !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { width: 220px; min-width: 220px; }
+    .canvas-panel.open { width: 100%; min-width: 0; position: absolute; right: 0; z-index: 10; height: 100%; }
+  }
+
+  @media (max-width: 600px) {
+    .sidebar {
+      position: absolute;
+      z-index: 10;
+      height: 100%;
+      transform: translateX(-100%);
+      transition: transform 0.2s;
+    }
+    .sidebar.open { transform: translateX(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="sidebar-title">
+        <span class="glyph">⏀</span><span class="title-text"> VEKTOR</span>
+      </div>
+      <div class="new-thread-container">
+        <button class="new-thread-btn" onclick="toggleNewThreadDropdown(event)" title="New thread">+</button>
+        <div class="new-thread-dropdown" id="newThreadDropdown">
+          <button class="new-thread-option" onclick="createThread(); closeNewThreadDropdown();">
+            <span class="option-glyph amber">⏀</span>
+            <div>
+              <div class="option-label">Chat with Vektor</div>
+              <div class="option-desc">Direct conversation with Vektor</div>
+            </div>
+          </button>
+          <button class="new-thread-option" onclick="createThread(null, 'anima'); closeNewThreadDropdown();">
+            <span class="option-glyph blue-slate">△</span>
+            <div>
+              <div class="option-label">Chat with Anima</div>
+              <div class="option-desc">Direct conversation with Anima</div>
+            </div>
+          </button>
+          <button class="new-thread-option" onclick="createGroupThread(); closeNewThreadDropdown();">
+            <span class="option-glyph dual">⏀ △</span>
+            <div>
+              <div class="option-label">Group Chat</div>
+              <div class="option-desc">Vektor + Anima together</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="thread-list" id="threadList"></div>
+    <button class="collapsed-new-thread-btn" onclick="createThread()" title="New chat">+</button>
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <span class="footer-text">OPUS 4.6 · GATEWAY</span>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="main-header">
+      <span class="main-header-title" id="mainTitle">Select a thread</span>
+      <span class="main-header-model">claude-opus-4-6</span>
+    </div>
+    <div class="messages" id="messages">
+      <div class="empty-state">
+        <div class="empty-glyph">⏀</div>
+        <div class="empty-text">START A CONVERSATION</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="attachment-preview" id="attachmentPreview"></div>
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="typingLabel">thinking...</span>
+      </div>
+      <div class="input-wrapper">
+        <button class="upload-btn" onclick="document.getElementById('fileInput').click()" title="Upload file or image">
+          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <textarea
+          class="input-box"
+          id="inputBox"
+          placeholder="Message Vektor..."
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this); updateCharCount(); saveDraft();"
+        ></textarea>
+        <span class="char-count" id="charCount">0</span>
+        <button class="send-btn" id="sendBtn" onclick="handleSendClick()" disabled>↑</button>
+      </div>
+      <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.html,.csv,.json,.pdf" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- Drop overlay -->
+    <div class="drop-overlay" id="dropOverlay">
+      <div class="drop-overlay-icon">⏀</div>
+      <div class="drop-overlay-text">DROP FILES HERE</div>
+    </div>
+
+    <!-- Lightbox for image zoom -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+      <img id="lightboxImg" src="" alt="">
+    </div>
+  </div>
+
+  <!-- Resize Handle -->
+  <div class="canvas-resize-handle" id="canvasResizeHandle"></div>
+
+  <!-- Canvas Panel -->
+  <div class="canvas-panel" id="canvasPanel">
+    <div class="canvas-header">
+      <div class="canvas-header-top">
+        <div class="canvas-header-left">
+          <div class="canvas-artifact-select" id="canvasArtifactSelect">
+            <button class="canvas-artifact-btn" id="canvasArtifactBtn" onclick="toggleArtifactDropdown(event)">
+              <span id="canvasArtifactCount">1</span> artifact<span id="canvasArtifactPlural">s</span> ▾
+            </button>
+            <div class="canvas-artifact-dropdown" id="canvasArtifactDropdown"></div>
+          </div>
+          <div class="canvas-title" id="canvasTitle">Untitled</div>
+          <span class="canvas-lang-tag" id="canvasLangTag">HTML</span>
+        </div>
+        <div class="canvas-header-actions">
+          <button class="canvas-action-btn" onclick="copyCanvasContent()" title="Copy">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+          <button class="canvas-action-btn" onclick="downloadCanvasContent()" title="Download">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="canvas-action-btn" onclick="openCanvasInNewTab()" title="Open in tab">
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+          <button class="canvas-action-btn" onclick="toggleVersionHistory()" title="History" id="canvasHistoryBtn">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+          <button class="canvas-action-btn close" onclick="closeCanvas()" title="Close">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="canvas-tab-bar">
+        <button class="canvas-view-tab active" id="canvasTabPreview" onclick="switchCanvasTab('preview')">Preview</button>
+        <button class="canvas-view-tab" id="canvasTabCode" onclick="switchCanvasTab('code')">Code</button>
+      </div>
+    </div>
+    <div class="canvas-body" id="canvasBody">
+      <div class="canvas-empty">
+        <div class="canvas-empty-icon">◫</div>
+        <div class="canvas-empty-text">NO ARTIFACTS</div>
+      </div>
+      <!-- Version history side panel -->
+      <div class="canvas-version-panel" id="canvasVersionPanel">
+        <div class="canvas-version-header">
+          <span class="canvas-version-title">VERSION HISTORY</span>
+          <button class="canvas-version-close" onclick="toggleVersionHistory()">✕</button>
+        </div>
+        <div class="canvas-version-list" id="canvasVersionList"></div>
+      </div>
+    </div>
+    <div class="canvas-footer" id="canvasFooter">
+      <span id="canvasFooterInfo">Ready</span>
+      <span id="canvasVersionCount"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// ── Config ──
+// ══════════════════════════════════════════════
+const GATEWAY_URL = '/v1/responses';
+const GATEWAY_URL_LEGACY = '/v1/chat/completions';
+const GATEWAY_TOKEN = '4eb4da3535e77ff6852b1b97e69d0e0965205018e8012ff1';
+const AGENT_ID = 'main';
+const STORAGE_KEY = 'vektor_threads';
+const DRAFT_STORAGE_KEY = 'vektor_drafts';
+
+const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const FILE_MIMES = ['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/pdf'];
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+// ═══════════════════════════════════════════
+// Agent Registry (Group Chat)
+// ═══════════════════════════════════════════
+const AGENTS = {
+  main: {
+    id: 'main',
+    name: 'VEKTOR',
+    glyph: '⏀',
+    accent: '#d4a574',
+    accentDim: '#8b6f4e',
+    accentGlow: 'rgba(212, 165, 116, 0.08)'
+  },
+  anima: {
+    id: 'anima',
+    name: 'ANIMA',
+    glyph: '△',
+    accent: '#7b8fb0',
+    accentDim: '#556b8a',
+    accentGlow: 'rgba(123, 143, 176, 0.08)'
+  }
+};
+
+// ══════════════════════════════════════════════
+// ── State ──
+// ══════════════════════════════════════════════
+let threads = [];
+let activeThreadId = null;
+let isStreaming = false;
+let activeGroupStreams = 0;
+let pendingAttachments = [];
+let currentAbortController = null; // For stop generation
+
+// ══════════════════════════════════════════════
+// ── Toast Notifications ──
+// ══════════════════════════════════════════════
+function showToast(message) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+// ══════════════════════════════════════════════
+// ── Init ──
+// ══════════════════════════════════════════════
+async function init() {
+  loadThreads();
+  // Migrate legacy threads that lack mode/participants/agentId
+  threads.forEach(t => {
+    if (!t.mode) { t.mode = 'direct'; }
+    if (!t.participants) { t.participants = ['main']; }
+    // Migrate: direct threads without agentId default to 'main'
+    if (t.mode === 'direct' && !t.agentId) { t.agentId = 'main'; }
+    // Migrate: add timestamps to existing messages
+    t.messages.forEach(m => {
+      if (!m.timestamp) m.timestamp = t.created || Date.now();
+    });
+  });
+  // Auto-cleanup: remove empty threads (fix for phantom thread bug)
+  const beforeCount = threads.length;
+  threads = threads.filter(t => t.messages && t.messages.length > 0);
+  if (threads.length !== beforeCount) {
+    console.log(`[Cleanup] Removed ${beforeCount - threads.length} empty threads`);
+    localStorage.setItem('vektor_threads', JSON.stringify(threads));
+  }
+  if (threads.length === 0) createThread('General');
+  renderThreadList();
+  switchThread(threads[0].id);
+  initCrossTabSync();
+
+  // Server thread loading disabled — using localStorage only for now
+  // loadThreadsFromServer().then(loaded => {
+  //   if (loaded) {
+  //     renderThreadList();
+  //     if (activeThreadId && threads.find(t => t.id === activeThreadId)) {
+  //       renderMessages();
+  //     }
+  //   }
+  // });
+
+  // Connect WebSocket for real-time updates
+  initWebSocket();
+  
+  const inputBox = document.getElementById('inputBox');
+  inputBox.addEventListener('input', updateSendBtn);
+
+  // Paste handler for images
+  inputBox.addEventListener('paste', handlePaste);
+
+  // Drag & drop
+  let dragCounter = 0;
+  document.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    document.getElementById('dropOverlay').classList.add('active');
+  });
+  document.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      document.getElementById('dropOverlay').classList.remove('active');
+    }
+  });
+  document.addEventListener('dragover', (e) => e.preventDefault());
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    document.getElementById('dropOverlay').classList.remove('active');
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('newThreadDropdown');
+    const btn = e.target.closest('.new-thread-btn');
+    if (!btn && dropdown.classList.contains('open')) {
+      closeNewThreadDropdown();
+    }
+  });
+}
+
+function updateSendBtn() {
+  const hasText = document.getElementById('inputBox').value.trim().length > 0;
+  const hasAttachments = pendingAttachments.length > 0;
+  const sendBtn = document.getElementById('sendBtn');
+  // Don't change button state if we're streaming (stop btn is showing)
+  if (isStreaming) return;
+  sendBtn.disabled = !(hasText || hasAttachments);
+}
+
+// ═══════════════════════════════════════════
+// New Thread Dropdown
+// ═══════════════════════════════════════════
+function toggleNewThreadDropdown(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('newThreadDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeNewThreadDropdown() {
+  document.getElementById('newThreadDropdown').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+// ── Storage (Local + Server Sync) ──
+// ══════════════════════════════════════════════
+function loadThreads() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    threads = raw ? JSON.parse(raw) : [];
+  } catch { threads = []; }
+}
+
+function saveThreads() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
+  if (_syncChannel) {
+    try { _syncChannel.postMessage({ type: 'threads-updated', activeThreadId }); } catch {}
+  }
+  // Server thread sync disabled — was causing catastrophic thread duplication
+  // syncThreadsToServer();
+}
+
+// ═══════════════════════════════════════════
+// Server-Side Thread Persistence
+// ═══════════════════════════════════════════
+let _serverSyncPending = false;
+let _serverSyncTimer = null;
+
+// ── Server thread sync DISABLED ──
+// Was causing a feedback loop: frontend creates thread → syncs to server →
+// server broadcasts via WebSocket → frontend loads from server → creates duplicates → repeat forever.
+// TODO: Re-implement with proper ID reconciliation and dedup.
+function syncThreadsToServer() { /* disabled */ }
+async function syncSingleThread(thread) { /* disabled */ }
+async function loadThreadsFromServer() { return false; /* disabled */ }
+
+function saveThreadsLocal() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
+  if (_syncChannel) {
+    try { _syncChannel.postMessage({ type: 'threads-updated', activeThreadId }); } catch {}
+  }
+}
+
+// ═══════════════════════════════════════════
+// Draft Persistence
+// ═══════════════════════════════════════════
+function loadDrafts() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveDraft() {
+  if (!activeThreadId) return;
+  const text = document.getElementById('inputBox').value;
+  const drafts = loadDrafts();
+  if (text.trim()) {
+    drafts[activeThreadId] = text;
+  } else {
+    delete drafts[activeThreadId];
+  }
+  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+}
+
+function restoreDraft() {
+  if (!activeThreadId) return;
+  const drafts = loadDrafts();
+  const inputBox = document.getElementById('inputBox');
+  const draft = drafts[activeThreadId] || '';
+  inputBox.value = draft;
+  autoResize(inputBox);
+  updateCharCount();
+  updateSendBtn();
+}
+
+function clearDraft() {
+  if (!activeThreadId) return;
+  const drafts = loadDrafts();
+  delete drafts[activeThreadId];
+  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+}
+
+// ═══════════════════════════════════════════
+// Character Count
+// ═══════════════════════════════════════════
+function updateCharCount() {
+  const text = document.getElementById('inputBox').value;
+  const el = document.getElementById('charCount');
+  const len = text.length;
+  el.textContent = len.toLocaleString();
+  el.classList.toggle('visible', len > 0);
+  el.classList.toggle('warn', len > 10000);
+}
+
+// ═══════════════════════════════════════════
+// Cross-Tab Sync
+// ═══════════════════════════════════════════
+let _syncChannel = null;
+let _syncPaused = false;
+
+function initCrossTabSync() {
+  try {
+    _syncChannel = new BroadcastChannel('vektor_sync');
+    _syncChannel.onmessage = (e) => {
+      if (_syncPaused) return;
+      if (e.data?.type === 'threads-updated') {
+        reloadThreadsFromStorage();
+      }
+    };
+  } catch {}
+
+  window.addEventListener('storage', (e) => {
+    if (_syncPaused) return;
+    if (e.key === STORAGE_KEY && e.newValue) {
+      reloadThreadsFromStorage();
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !_syncPaused) {
+      reloadThreadsFromStorage();
+    }
+  });
+}
+
+function reloadThreadsFromStorage() {
+  const previousActiveId = activeThreadId;
+  loadThreads();
+  threads.forEach(t => {
+    if (!t.mode) t.mode = 'direct';
+    if (!t.participants) t.participants = ['main'];
+    if (t.mode === 'direct' && !t.agentId) t.agentId = 'main';
+  });
+  renderThreadList();
+  if (previousActiveId && threads.find(t => t.id === previousActiveId)) {
+    activeThreadId = previousActiveId;
+    renderMessages();
+    renderThreadList();
+  } else if (threads.length > 0) {
+    switchThread(threads[0].id);
+  }
+}
+
+// ═══════════════════════════════════════════
+// WebSocket Client (Real-Time)
+// ═══════════════════════════════════════════
+let _ws = null;
+let _wsReconnectTimer = null;
+
+function initWebSocket() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${location.host}/ws`;
+  
+  try {
+    _ws = new WebSocket(wsUrl);
+    
+    _ws.onopen = () => {
+      console.log('[WS] Connected');
+      // Subscribe to active thread
+      if (activeThreadId) {
+        _ws.send(JSON.stringify({ type: 'subscribe', threadId: activeThreadId }));
+      }
+    };
+    
+    _ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        handleWSEvent(msg);
+      } catch {}
+    };
+    
+    _ws.onclose = () => {
+      console.log('[WS] Disconnected — reconnecting in 5s');
+      _ws = null;
+      _wsReconnectTimer = setTimeout(initWebSocket, 5000);
+    };
+    
+    _ws.onerror = () => {
+      _ws?.close();
+    };
+  } catch {
+    _wsReconnectTimer = setTimeout(initWebSocket, 5000);
+  }
+}
+
+function handleWSEvent(msg) {
+  switch (msg.type) {
+    case 'connected':
+      console.log(`[WS] Client ${msg.clientId} at ${msg.serverTime}`);
+      break;
+    case 'tool_use':
+      // Show tool use notification
+      setTypingIndicator(true, 'using tools');
+      break;
+    case 'stream_done':
+      setTypingIndicator(false);
+      break;
+    case 'thread_created':
+    case 'thread_updated':
+    case 'thread_deleted':
+      // Server thread sync disabled — ignore these events for now
+      // loadThreadsFromServer().then(loaded => {
+      //   if (loaded) renderThreadList();
+      // });
+      break;
+  }
+}
+
+// ══════════════════════════════════════════════
+// ── Threads ──
+// ══════════════════════════════════════════════
+function createThread(name, agentId) {
+  agentId = agentId || 'main';
+  const agent = AGENTS[agentId] || AGENTS.main;
+  const id = 'thread_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+  const thread = {
+    id,
+    name: name || `Thread ${threads.length + 1}`,
+    messages: [],
+    created: Date.now(),
+    mode: 'direct',
+    agentId: agentId,
+    participants: [agentId]
+  };
+  threads.unshift(thread);
+  saveThreads();
+  renderThreadList();
+  switchThread(id);
+  // Server thread creation disabled — localStorage only for now
+  // fetch('/api/threads', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({ id: thread.id, name: thread.name, mode: thread.mode, participants: thread.participants })
+  // }).catch(() => {});
+  return thread;
+}
+
+function createGroupThread(name) {
+  const id = 'thread_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+  const thread = {
+    id,
+    name: name || `Group ${threads.filter(t => t.mode === 'group').length + 1}`,
+    messages: [],
+    created: Date.now(),
+    mode: 'group',
+    participants: ['main', 'anima']
+  };
+  threads.unshift(thread);
+  saveThreads();
+  renderThreadList();
+  switchThread(id);
+  return thread;
+}
+
+function deleteThread(id, e) {
+  e?.stopPropagation();
+  if (threads.length <= 1) return;
+  threads = threads.filter(t => t.id !== id);
+  saveThreads();
+  if (activeThreadId === id) {
+    switchThread(threads[0]?.id);
+  }
+  renderThreadList();
+}
+
+function startRename(id, e) {
+  e?.stopPropagation();
+  const el = document.querySelector(`[data-thread-id="${id}"] .thread-name`);
+  const thread = threads.find(t => t.id === id);
+  if (!el || !thread) return;
+  
+  const input = document.createElement('input');
+  input.className = 'rename-input';
+  input.value = thread.name;
+  input.onblur = () => finishRename(id, input.value);
+  input.onkeydown = (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+    if (ev.key === 'Escape') { el.textContent = thread.name; }
+  };
+  el.textContent = '';
+  el.appendChild(input);
+  input.focus();
+  input.select();
+}
+
+function finishRename(id, name) {
+  const thread = threads.find(t => t.id === id);
+  if (thread && name.trim()) {
+    thread.name = name.trim();
+    saveThreads();
+  }
+  renderThreadList();
+}
+
+function switchThread(id) {
+  activeThreadId = id;
+  const thread = threads.find(t => t.id === id);
+  if (!thread) return;
+  
+  updateThreadHeader(thread);
+  updateInputPlaceholder(thread);
+  renderMessages();
+  renderThreadList();
+  restoreDraft();
+  document.getElementById('inputBox').focus();
+}
+
+// ═══════════════════════════════════════════
+// Thread Header & Input Updates
+// ═══════════════════════════════════════════
+function updateThreadHeader(thread) {
+  const titleEl = document.getElementById('mainTitle');
+  
+  if (thread.mode === 'group') {
+    const parts = thread.participants.map(pid => {
+      const agent = AGENTS[pid];
+      if (!agent) return '';
+      return `<span class="participant-tag"><span style="color:${agent.accent}">${agent.glyph}</span> <span style="color:${agent.accentDim}">${agent.name}</span></span>`;
+    }).join('<span class="participant-separator">·</span>');
+    
+    titleEl.innerHTML = `<span class="main-header-participants">${parts}</span>`;
+  } else {
+    const agent = AGENTS[thread.agentId || 'main'] || AGENTS.main;
+    titleEl.innerHTML = `<span class="main-header-participants"><span class="participant-tag"><span style="color:${agent.accent}">${agent.glyph}</span> <span style="color:${agent.accentDim}">${agent.name}</span></span></span>`;
+  }
+}
+
+function updateInputPlaceholder(thread) {
+  const inputBox = document.getElementById('inputBox');
+  if (thread.mode === 'group') {
+    inputBox.placeholder = 'Message the group...';
+  } else {
+    const agent = AGENTS[thread.agentId || 'main'] || AGENTS.main;
+    inputBox.placeholder = `Message ${agent.name.charAt(0) + agent.name.slice(1).toLowerCase()}...`;
+  }
+}
+
+// ══════════════════════════════════════════════
+// ── Timestamp Formatting ──
+// ══════════════════════════════════════════════
+function formatTimestamp(ts) {
+  if (!ts) return '';
+  const date = new Date(ts);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  
+  if (isToday) return time;
+  if (isYesterday) return `Yesterday ${time}`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + time;
+}
+
+// ══════════════════════════════════════════════
+// ── Render ──
+// ══════════════════════════════════════════════
+function renderThreadList() {
+  const list = document.getElementById('threadList');
+  list.innerHTML = threads.map(t => {
+    const isGroup = t.mode === 'group';
+    const directAgent = !isGroup ? (AGENTS[t.agentId || 'main'] || AGENTS.main) : null;
+    const badge = isGroup
+      ? `<span class="thread-mode-badge">${t.participants.map(p => AGENTS[p]?.glyph || '?').join('')}</span>`
+      : `<span class="thread-mode-badge" style="color:${directAgent.accentDim}">${directAgent.glyph}</span>`;
+    
+    // Generate initials for collapsed icon
+    const iconGlyph = isGroup ? '⏀△' : (directAgent ? directAgent.glyph : getThreadInitials(t));
+    
+    return `
+    <div class="thread-item ${t.id === activeThreadId ? 'active' : ''}"
+         data-thread-id="${t.id}"
+         onclick="switchThread('${t.id}')"
+         title="${escapeHtml(t.name)}">
+      <div class="thread-icon">${iconGlyph}</div>
+      <div class="thread-info">
+        <div class="thread-name">${badge}${escapeHtml(t.name)}</div>
+        <div class="thread-meta">${t.messages.length} messages${isGroup ? ' · group' : ''}</div>
+      </div>
+      <div class="thread-actions">
+        <button class="thread-action-btn" onclick="startRename('${t.id}', event)" title="Rename">✎</button>
+        <button class="thread-action-btn delete" onclick="deleteThread('${t.id}', event)" title="Delete">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getThreadInitials(thread) {
+  const name = thread.name || 'New Chat';
+  const words = name.split(/\s+/).filter(w => w.length > 0);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
+let sidebarCollapsed = false;
+
+function toggleSidebarCollapse() {
+  sidebarCollapsed = !sidebarCollapsed;
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('collapsed', sidebarCollapsed);
+  localStorage.setItem('vektor-sidebar-collapsed', sidebarCollapsed ? '1' : '0');
+}
+
+// Restore sidebar state on load
+(function() {
+  if (localStorage.getItem('vektor-sidebar-collapsed') === '1') {
+    sidebarCollapsed = true;
+    document.getElementById('sidebar').classList.add('collapsed');
+  }
+})();
+
+function renderMessages() {
+  const container = document.getElementById('messages');
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || thread.messages.length === 0) {
+    const isGroup = thread?.mode === 'group';
+    const directAgent = !isGroup && thread ? (AGENTS[thread.agentId || 'main'] || AGENTS.main) : null;
+    const glyph = isGroup ? '⏀△' : (directAgent ? directAgent.glyph : '⏀');
+    const emptyText = isGroup ? 'START A GROUP CONVERSATION' : (directAgent ? `START A CONVERSATION WITH ${directAgent.name}` : 'START A CONVERSATION');
+    const glyphColor = directAgent ? directAgent.accent : 'var(--accent)';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-glyph" style="color:${glyphColor}">${glyph}</div>
+        <div class="empty-text">${emptyText}</div>
+      </div>`;
+    return;
+  }
+
+  const isGroup = thread.mode === 'group';
+  const threadAgentId = thread.agentId || 'main';
+
+  container.innerHTML = thread.messages.map((m, i) => {
+    const agentId = isGroup ? (m.agentId || 'main') : threadAgentId;
+    const agent = AGENTS[agentId] || AGENTS.main;
+    const agentClass = (isGroup || agentId !== 'main') && m.role === 'assistant' ? ` agent-${agentId}` : '';
+
+    let attachmentHtml = '';
+    if (m.attachments && m.attachments.length > 0) {
+      attachmentHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">' +
+        m.attachments.map(att => {
+          if (att.type === 'image' && att.dataUrl) {
+            return `<img class="message-image" src="${att.dataUrl}" alt="${escapeHtml(att.name)}" onclick="openLightbox('${att.dataUrl}')">`;
+          } else {
+            return `<div class="message-file-badge">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+              ${escapeHtml(att.name)} · ${formatBytes(att.size)}
+            </div>`;
+          }
+        }).join('') +
+        '</div>';
+    }
+
+    const avatarContent = m.role === 'user' ? 'R' : agent.glyph;
+    const roleName = m.role === 'user' ? 'RILEY' : agent.name;
+    const timestamp = formatTimestamp(m.timestamp);
+
+    // Build message action buttons
+    const copyBtn = `<button class="msg-action-btn" onclick="copyMessageText(${i})" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`;
+    const editBtn = m.role === 'user' ? `<button class="msg-action-btn" onclick="startEditMessage(${i})" title="Edit"><svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>` : '';
+    const regenBtn = m.role === 'assistant' ? `<button class="msg-action-btn" onclick="regenerateMessage(${i})" title="Regenerate"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>` : '';
+    const deleteBtn = `<button class="msg-action-btn delete" onclick="confirmDeleteMessage(${i})" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>`;
+
+    const actionsHtml = `<div class="message-actions">${copyBtn}${editBtn}${regenBtn}${deleteBtn}</div>`;
+
+    return `
+      <div class="message ${m.role}${agentClass}" data-msg-index="${i}">
+        ${actionsHtml}
+        <div class="message-avatar">${avatarContent}</div>
+        <div class="message-content">
+          <div class="message-role-row">
+            <span class="message-role">${roleName}</span>
+            <span class="message-timestamp">${timestamp}</span>
+          </div>
+          ${attachmentHtml}
+          <div class="message-text" id="msg-${i}">${formatMessage(m.content)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Apply syntax highlighting to all code blocks
+  applyHighlighting();
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  const container = document.getElementById('messages');
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+  });
+}
+
+// ══════════════════════════════════════════════
+// ── Full Markdown Renderer (from scratch) ──
+// ══════════════════════════════════════════════
+function formatMessage(text) {
+  if (!text) return '';
+  return renderMarkdown(text);
+}
+
+function renderMarkdown(text) {
+  // Phase 1: Extract code blocks to prevent them from being processed
+  const codeBlocks = [];
+  let processed = text;
+  
+  // Extract fenced code blocks (``` ... ```)
+  processed = processed.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push({ lang: lang || '', code: code });
+    return `\x00CODEBLOCK${idx}\x00`;
+  });
+
+  // Extract inline code
+  const inlineCodes = [];
+  processed = processed.replace(/`([^`\n]+)`/g, (match, code) => {
+    const idx = inlineCodes.length;
+    inlineCodes.push(code);
+    return `\x00INLINECODE${idx}\x00`;
+  });
+
+  // Phase 2: Escape HTML
+  processed = escapeHtml(processed);
+
+  // Phase 3: Block-level elements (process line by line)
+  const lines = processed.split('\n');
+  let html = '';
+  let i = 0;
+  // List state: stack of { type: 'ul'|'ol', indent: number }
+  let listStack = [];
+  let inBlockquote = false;
+  let bqLines = []; // accumulate blockquote content
+
+  // Close all open lists
+  function closeAllLists() {
+    while (listStack.length > 0) {
+      const top = listStack.pop();
+      html += top.type === 'ul' ? '</ul>' : '</ol>';
+    }
+  }
+
+  function flushBlockquote() {
+    if (inBlockquote) {
+      // Render accumulated blockquote lines as inline-formatted content
+      html += '<blockquote>' + bqLines.map(l => inlineFormat(l)).join('<br>') + '</blockquote>';
+      inBlockquote = false;
+      bqLines = [];
+    }
+  }
+
+  // Get indent level (number of leading spaces)
+  function getIndent(line) {
+    const m = line.match(/^(\s*)/);
+    return m ? m[1].length : 0;
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Code block placeholder
+    if (trimmed.match(/^\x00CODEBLOCK\d+\x00$/)) {
+      closeAllLists();
+      flushBlockquote();
+      html += trimmed;
+      i++;
+      continue;
+    }
+
+    // Empty line
+    if (trimmed === '') {
+      closeAllLists();
+      flushBlockquote();
+      i++;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^(---|\*\*\*|___)$/.test(trimmed)) {
+      closeAllLists();
+      flushBlockquote();
+      html += '<hr>';
+      i++;
+      continue;
+    }
+
+    // Headers (h1-h6)
+    const headerMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headerMatch) {
+      closeAllLists();
+      flushBlockquote();
+      const level = headerMatch[1].length;
+      html += `<h${level}>${inlineFormat(headerMatch[2])}</h${level}>`;
+      i++;
+      continue;
+    }
+
+    // Table detection
+    if (trimmed.startsWith('|') && i + 1 < lines.length && /^\|[\s\-:|]+\|$/.test(lines[i + 1].trim())) {
+      closeAllLists();
+      flushBlockquote();
+      const tableResult = parseTable(lines, i);
+      html += tableResult.html;
+      i = tableResult.nextIndex;
+      continue;
+    }
+
+    // Blockquote — accumulate contiguous > lines
+    if (trimmed.startsWith('&gt; ') || trimmed === '&gt;') {
+      closeAllLists();
+      if (!inBlockquote) {
+        inBlockquote = true;
+        bqLines = [];
+      }
+      const quoteContent = trimmed.replace(/^&gt;\s?/, '');
+      // Nested blockquote
+      if (quoteContent.startsWith('&gt; ')) {
+        // Flush current, add nested
+        if (bqLines.length > 0) {
+          html += '<blockquote>' + bqLines.map(l => inlineFormat(l)).join('<br>');
+          bqLines = [];
+        } else {
+          html += '<blockquote>';
+        }
+        html += '<blockquote>' + inlineFormat(quoteContent.replace(/^&gt;\s?/, '')) + '</blockquote>';
+        html += '</blockquote>';
+        inBlockquote = false;
+      } else {
+        bqLines.push(quoteContent);
+      }
+      i++;
+      continue;
+    } else {
+      flushBlockquote();
+    }
+
+    // List items (task, unordered, ordered) — with nesting support
+    const indent = getIndent(line);
+    const taskMatch = trimmed.match(/^[-*]\s+\[([ xX])\]\s+(.+)$/);
+    const ulMatch = !taskMatch && trimmed.match(/^[-*+]\s+(.+)$/);
+    const olMatch = !taskMatch && !ulMatch && trimmed.match(/^\d+\.\s+(.+)$/);
+
+    if (taskMatch || ulMatch || olMatch) {
+      const itemType = olMatch ? 'ol' : 'ul';
+      // Determine nesting: compare indent to current stack
+      // Each indent level ~2 spaces
+      const level = Math.floor(indent / 2);
+
+      // Pop lists that are deeper than current
+      while (listStack.length > 0 && listStack[listStack.length - 1].indent > level) {
+        const top = listStack.pop();
+        html += top.type === 'ul' ? '</ul>' : '</ol>';
+      }
+
+      // If no list open or type changed at same level, open new
+      if (listStack.length === 0 || listStack[listStack.length - 1].indent < level || listStack[listStack.length - 1].type !== itemType) {
+        if (listStack.length > 0 && listStack[listStack.length - 1].indent === level && listStack[listStack.length - 1].type !== itemType) {
+          // Same level, different type — close old, open new
+          const top = listStack.pop();
+          html += top.type === 'ul' ? '</ul>' : '</ol>';
+        }
+        html += itemType === 'ul' ? '<ul>' : '<ol>';
+        listStack.push({ type: itemType, indent: level });
+      }
+
+      if (taskMatch) {
+        const checked = taskMatch[1] !== ' ' ? ' checked' : '';
+        html += `<li class="task-item"><input type="checkbox"${checked} disabled> ${inlineFormat(taskMatch[2])}</li>`;
+      } else if (ulMatch) {
+        html += `<li>${inlineFormat(ulMatch[1])}</li>`;
+      } else {
+        html += `<li>${inlineFormat(olMatch[1])}</li>`;
+      }
+      i++;
+      continue;
+    }
+
+    // Not a list item — close all lists
+    closeAllLists();
+
+    // Regular paragraph
+    let para = trimmed;
+    while (i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      if (nextLine === '' || nextLine.match(/^#{1,6}\s/) || nextLine.match(/^[-*+]\s/) || nextLine.match(/^\d+\.\s/) || nextLine.startsWith('|') || nextLine.startsWith('&gt;') || nextLine.match(/^\x00CODEBLOCK/) || /^(---|\*\*\*|___)$/.test(nextLine) || nextLine.match(/^[-*]\s+\[[ xX]\]/)) {
+        break;
+      }
+      i++;
+      para += '<br>' + lines[i].trim();
+    }
+    html += `<p>${inlineFormat(para)}</p>`;
+    i++;
+  }
+
+  closeAllLists();
+  flushBlockquote();
+
+  // Phase 4: Restore code blocks
+  html = html.replace(/\x00CODEBLOCK(\d+)\x00/g, (_, idx) => {
+    const block = codeBlocks[parseInt(idx)];
+    return buildCodeBlockHtml(block.lang, block.code);
+  });
+
+  // Phase 5: Restore inline code
+  html = html.replace(/\x00INLINECODE(\d+)\x00/g, (_, idx) => {
+    return `<code>${escapeHtml(inlineCodes[parseInt(idx)])}</code>`;
+  });
+
+  return html;
+}
+
+// Inline formatting: bold, italic, strikethrough, links, images
+function inlineFormat(text) {
+  // Images: ![alt](url)
+  text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;margin:8px 0;">');
+  // Links: [text](url)
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Bold + italic: ***text***
+  text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+  // Bold: **text**
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Italic: *text*
+  text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  // Strikethrough: ~~text~~
+  text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  // Restore inline code placeholders (they were already extracted, no action needed)
+  return text;
+}
+
+// Parse markdown table from lines
+function parseTable(lines, startIdx) {
+  let i = startIdx;
+  const headerLine = lines[i].trim();
+  i++; // skip separator
+  const sepLine = lines[i].trim();
+  i++;
+
+  const headers = headerLine.split('|').filter(c => c.trim() !== '').map(c => c.trim());
+  
+  // Parse alignment from separator
+  const aligns = sepLine.split('|').filter(c => c.trim() !== '').map(c => {
+    const t = c.trim();
+    if (t.startsWith(':') && t.endsWith(':')) return 'center';
+    if (t.endsWith(':')) return 'right';
+    return 'left';
+  });
+
+  let html = '<div class="table-wrapper"><table><thead><tr>';
+  headers.forEach((h, idx) => {
+    const align = aligns[idx] || 'left';
+    // Text is already HTML-escaped from Phase 2, just apply inline formatting
+    html += `<th style="text-align:${align}">${inlineFormat(h)}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  while (i < lines.length && lines[i].trim().startsWith('|')) {
+    const cells = lines[i].trim().split('|').filter(c => c.trim() !== '').map(c => c.trim());
+    html += '<tr>';
+    cells.forEach((cell, idx) => {
+      const align = aligns[idx] || 'left';
+      html += `<td style="text-align:${align}">${inlineFormat(cell)}</td>`;
+    });
+    html += '</tr>';
+    i++;
+  }
+
+  html += '</tbody></table></div>';
+  return { html, nextIndex: i };
+}
+
+// Build code block HTML with header, line numbers, and highlighting
+function buildCodeBlockHtml(lang, code) {
+  // Remove trailing newline
+  const trimmedCode = code.replace(/\n$/, '');
+  const lineCount = trimmedCode.split('\n').length;
+  const lineNums = Array.from({ length: lineCount }, (_, i) => `<span>${i + 1}</span>`).join('');
+  const langLabel = lang ? lang.toUpperCase() : 'CODE';
+  
+  // We'll encode the raw code for copy
+  const encodedCode = btoa(unescape(encodeURIComponent(trimmedCode)));
+
+  return `<div class="code-block-wrapper">
+    <div class="code-block-header">
+      <span class="code-block-lang">${escapeHtml(langLabel)}</span>
+      <div class="code-block-actions">
+        <button class="code-action-btn" onclick="copyCodeBlockB64(this, '${encodedCode}')">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy
+        </button>
+        <button class="code-action-btn" onclick="openCodeInCanvasB64('${encodedCode}', '${escapeHtml(langLabel)}')">Canvas</button>
+      </div>
+    </div>
+    <div class="code-block-body">
+      <div class="code-line-numbers">${lineNums}</div>
+      <pre class="code-block-code"><code class="language-${lang || 'plaintext'}">${escapeHtml(trimmedCode)}</code></pre>
+    </div>
+  </div>`;
+}
+
+// Apply highlight.js to all code blocks (debounced during streaming)
+let _hlPending = false;
+function applyHighlighting() {
+  if (_hlPending) return;
+  _hlPending = true;
+  requestAnimationFrame(() => {
+    _hlPending = false;
+    document.querySelectorAll('.code-block-code code:not(.hljs)').forEach(block => {
+      try { hljs.highlightElement(block); } catch(e) {}
+    });
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ══════════════════════════════════════════════
+// ── Message Actions ──
+// ══════════════════════════════════════════════
+
+// Copy full message text
+function copyMessageText(msgIndex) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || !thread.messages[msgIndex]) return;
+  const text = thread.messages[msgIndex].content || '';
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard');
+  });
+}
+
+// Edit message — transform into editable textarea
+function startEditMessage(msgIndex) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || !thread.messages[msgIndex] || thread.messages[msgIndex].role !== 'user') return;
+  if (isStreaming) return;
+  
+  const msgEl = document.getElementById(`msg-${msgIndex}`);
+  if (!msgEl) return;
+
+  const originalText = thread.messages[msgIndex].content || '';
+  
+  msgEl.innerHTML = `
+    <textarea class="edit-message-area" id="editArea-${msgIndex}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,300)+'px'">${escapeHtml(originalText)}</textarea>
+    <div class="edit-message-actions">
+      <button class="edit-msg-btn save" onclick="submitEditMessage(${msgIndex})">Save & Resend</button>
+      <button class="edit-msg-btn" onclick="cancelEditMessage(${msgIndex})">Cancel</button>
+    </div>`;
+  
+  const ta = document.getElementById(`editArea-${msgIndex}`);
+  ta.focus();
+  ta.style.height = Math.min(ta.scrollHeight, 300) + 'px';
+}
+
+function cancelEditMessage(msgIndex) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || !thread.messages[msgIndex]) return;
+  const msgEl = document.getElementById(`msg-${msgIndex}`);
+  if (msgEl) {
+    msgEl.innerHTML = formatMessage(thread.messages[msgIndex].content);
+    applyHighlighting();
+  }
+}
+
+async function submitEditMessage(msgIndex) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || isStreaming) return;
+  
+  const ta = document.getElementById(`editArea-${msgIndex}`);
+  if (!ta) return;
+  const newText = ta.value.trim();
+  if (!newText) return;
+
+  // Update message and remove everything after it
+  thread.messages[msgIndex].content = newText;
+  thread.messages[msgIndex].timestamp = Date.now();
+  thread.messages = thread.messages.slice(0, msgIndex + 1);
+  saveThreads();
+  renderMessages();
+
+  // Re-send from this point
+  if (thread.mode === 'group') {
+    await sendGroupMessage(thread, newText, []);
+  } else {
+    await sendDirectMessage(thread, newText, []);
+  }
+}
+
+// Regenerate: re-send conversation up to that point
+async function regenerateMessage(msgIndex) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || isStreaming) return;
+  
+  const msg = thread.messages[msgIndex];
+  if (msg.role !== 'assistant') return;
+
+  // Find the last user message before this assistant message
+  let lastUserText = '';
+  for (let j = msgIndex - 1; j >= 0; j--) {
+    if (thread.messages[j].role === 'user') {
+      lastUserText = thread.messages[j].content || '';
+      break;
+    }
+  }
+
+  // Remove this assistant message and everything after
+  thread.messages = thread.messages.slice(0, msgIndex);
+  saveThreads();
+  renderMessages();
+
+  // Re-send
+  if (thread.mode === 'group') {
+    await sendGroupMessage(thread, lastUserText, []);
+  } else {
+    await sendDirectMessage(thread, lastUserText, []);
+  }
+}
+
+// Delete message with confirmation
+function confirmDeleteMessage(msgIndex) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = `
+    <div class="confirm-dialog">
+      <h3>Delete message?</h3>
+      <p>This action cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Cancel</button>
+        <button class="confirm-btn danger" onclick="executeDeleteMessage(${msgIndex}); this.closest('.confirm-overlay').remove()">Delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+function executeDeleteMessage(msgIndex) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread) return;
+  thread.messages.splice(msgIndex, 1);
+  saveThreads();
+  renderMessages();
+  showToast('Message deleted');
+}
+
+// Stop generation
+function stopGeneration() {
+  if (currentAbortController) {
+    currentAbortController.abort();
+    currentAbortController = null;
+  }
+}
+
+// Handle send/stop button click
+function handleSendClick() {
+  if (isStreaming) {
+    stopGeneration();
+  } else {
+    sendMessage();
+  }
+}
+
+// Update send button to show stop state
+function setSendButtonStreaming(streaming) {
+  const btn = document.getElementById('sendBtn');
+  if (streaming) {
+    btn.innerHTML = '■';
+    btn.classList.add('stop-btn');
+    btn.disabled = false;
+    btn.title = 'Stop generation';
+  } else {
+    btn.innerHTML = '↑';
+    btn.classList.remove('stop-btn');
+    btn.title = '';
+    updateSendBtn();
+  }
+}
+
+// Show/hide typing indicator
+function setTypingIndicator(active, agentName) {
+  const el = document.getElementById('typingIndicator');
+  const label = document.getElementById('typingLabel');
+  if (active) {
+    label.textContent = agentName ? `${agentName} is thinking...` : 'thinking...';
+    el.classList.add('active');
+  } else {
+    el.classList.remove('active');
+  }
+}
+
+// ══════════════════════════════════════════════
+// ── Input ──
+// ══════════════════════════════════════════════
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (isStreaming) return;
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+}
+
+// ══════════════════════════════════════════════
+// ── File & Image Upload ──
+// ══════════════════════════════════════════════
+function handleFileSelect(event) {
+  handleFiles(event.target.files);
+  event.target.value = '';
+}
+
+function handlePaste(event) {
+  const items = event.clipboardData?.items;
+  if (!items) return;
+  
+  const files = [];
+  for (const item of items) {
+    if (item.kind === 'file') {
+      const file = item.getAsFile();
+      if (file) files.push(file);
+    }
+  }
+  if (files.length) {
+    event.preventDefault();
+    handleFiles(files);
+  }
+}
+
+function mimeFromExt(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const map = {
+    txt: 'text/plain', md: 'text/markdown', html: 'text/html', htm: 'text/html',
+    csv: 'text/csv', json: 'application/json', pdf: 'application/pdf',
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+    gif: 'image/gif', webp: 'image/webp'
+  };
+  return map[ext] || '';
+}
+
+function isTextMime(mime) {
+  return mime && (mime.startsWith('text/') || mime === 'application/json');
+}
+
+function handleFiles(fileList) {
+  for (const file of fileList) {
+    const mime = file.type || mimeFromExt(file.name);
+    const isImage = IMAGE_MIMES.includes(mime);
+    const isFile = FILE_MIMES.includes(mime);
+    
+    if (!isImage && !isFile) {
+      showToast(`Unsupported file type: ${mime || file.name}`);
+      continue;
+    }
+    
+    if (isImage && file.size > MAX_IMAGE_BYTES) {
+      showToast(`Image too large: ${file.name}`);
+      continue;
+    }
+    
+    if (isFile && file.size > MAX_FILE_BYTES) {
+      showToast(`File too large: ${file.name}`);
+      continue;
+    }
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        const base64 = dataUrl.split(',')[1];
+        pendingAttachments.push({
+          type: 'image', name: file.name, size: file.size, mime,
+          dataUrl, base64
+        });
+        renderAttachmentPreview();
+        updateSendBtn();
+      };
+      reader.readAsDataURL(file);
+    } else if (isTextMime(mime)) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingAttachments.push({
+          type: 'text-file', name: file.name, size: file.size, mime,
+          textContent: reader.result
+        });
+        renderAttachmentPreview();
+        updateSendBtn();
+      };
+      reader.readAsText(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        const base64 = dataUrl.split(',')[1];
+        pendingAttachments.push({
+          type: 'file', name: file.name, size: file.size, mime,
+          dataUrl, base64
+        });
+        renderAttachmentPreview();
+        updateSendBtn();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+}
+
+function removeAttachment(index) {
+  pendingAttachments.splice(index, 1);
+  renderAttachmentPreview();
+  updateSendBtn();
+}
+
+function renderAttachmentPreview() {
+  const container = document.getElementById('attachmentPreview');
+  
+  if (pendingAttachments.length === 0) {
+    container.classList.remove('has-items');
+    container.innerHTML = '';
+    return;
+  }
+  
+  container.classList.add('has-items');
+  container.innerHTML = pendingAttachments.map((att, i) => {
+    if (att.type === 'image') {
+      return `
+        <div class="attachment-item image">
+          <img src="${att.dataUrl}" alt="${escapeHtml(att.name)}">
+          <button class="attachment-remove" onclick="removeAttachment(${i})">✕</button>
+        </div>`;
+    } else {
+      return `
+        <div class="attachment-item file">
+          <div class="attachment-file-icon">📄</div>
+          <div class="attachment-file-info">
+            <div class="attachment-file-name">${escapeHtml(att.name)}</div>
+            <div class="attachment-file-size">${formatBytes(att.size)}</div>
+          </div>
+          <button class="attachment-remove" onclick="removeAttachment(${i})">✕</button>
+        </div>`;
+    }
+  }).join('');
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.getElementById('lightboxImg').src = '';
+}
+
+// ══════════════════════════════════════════════
+// ── API Message Builders ──
+// ══════════════════════════════════════════════
+function buildResponsesInput(messages, attachments) {
+  const input = [];
+  
+  for (let i = 0; i < messages.length - 1; i++) {
+    const m = messages[i];
+    input.push({
+      type: 'message',
+      role: m.role,
+      content: m.content || ''
+    });
+  }
+  
+  const lastMsg = messages[messages.length - 1];
+  const contentParts = [];
+  
+  if (lastMsg.content) {
+    contentParts.push({
+      type: 'input_text',
+      text: lastMsg.content
+    });
+  }
+  
+  for (const att of attachments) {
+    if (att.type === 'image') {
+      contentParts.push({
+        type: 'input_image',
+        source: {
+          type: 'base64',
+          media_type: att.mime,
+          data: att.base64
+        }
+      });
+    } else {
+      contentParts.push({
+        type: 'input_file',
+        source: {
+          type: 'base64',
+          media_type: att.mime,
+          data: att.base64,
+          filename: att.name
+        }
+      });
+    }
+  }
+  
+  if (!lastMsg.content && contentParts.length > 0) {
+    contentParts.unshift({
+      type: 'input_text',
+      text: 'Here is the attached file.'
+    });
+  }
+  
+  input.push({
+    type: 'message',
+    role: 'user',
+    content: contentParts
+  });
+  
+  return input;
+}
+
+// ═══════════════════════════════════════════
+// Group Chat: Build context messages for a specific agent
+// ═══════════════════════════════════════════
+function buildGroupChatMessages(thread, targetAgentId, messageContent) {
+  const participantNames = thread.participants.map(p => `${AGENTS[p]?.name || p} (AI)`).join(', ');
+  const systemNote = `This is a group conversation between Riley (human), ${participantNames}. When other AI participants have spoken, their messages appear with their name prefixed. Respond naturally as yourself — don't prefix your own name.`;
+
+  const messages = [];
+  messages.push({ role: 'system', content: systemNote });
+
+  const allMessages = thread.messages;
+  for (let i = 0; i < allMessages.length; i++) {
+    const m = allMessages[i];
+    if (m.role === 'user') {
+      messages.push({ role: 'user', content: m.content || '' });
+    } else if (m.role === 'assistant') {
+      const msgAgentId = m.agentId || 'main';
+      const msgAgent = AGENTS[msgAgentId];
+      
+      if (msgAgentId === targetAgentId) {
+        if (m.content) {
+          messages.push({ role: 'assistant', content: m.content });
+        }
+      } else {
+        if (m.content) {
+          messages.push({ role: 'user', content: `[${msgAgent?.name || msgAgentId} said]: ${m.content}` });
+        }
+      }
+    }
+  }
+
+  return messages;
+}
+
+function buildGroupResponsesInput(thread, targetAgentId, attachments) {
+  const participantNames = thread.participants.map(p => `${AGENTS[p]?.name || p} (AI)`).join(', ');
+  const systemNote = `This is a group conversation between Riley (human), ${participantNames}. When other AI participants have spoken, their messages appear with their name prefixed. Respond naturally as yourself — don't prefix your own name.`;
+
+  const input = [];
+  input.push({ type: 'message', role: 'system', content: systemNote });
+
+  const allMessages = thread.messages;
+  for (let i = 0; i < allMessages.length - 1; i++) {
+    const m = allMessages[i];
+    if (m.role === 'user') {
+      input.push({ type: 'message', role: 'user', content: m.content || '' });
+    } else if (m.role === 'assistant') {
+      const msgAgentId = m.agentId || 'main';
+      const msgAgent = AGENTS[msgAgentId];
+      if (msgAgentId === targetAgentId) {
+        if (m.content) input.push({ type: 'message', role: 'assistant', content: m.content });
+      } else {
+        if (m.content) input.push({ type: 'message', role: 'user', content: `[${msgAgent?.name || msgAgentId} said]: ${m.content}` });
+      }
+    }
+  }
+
+  const lastMsg = allMessages[allMessages.length - 1];
+  const contentParts = [];
+  
+  if (lastMsg?.content) {
+    contentParts.push({ type: 'input_text', text: lastMsg.content });
+  }
+  
+  for (const att of attachments) {
+    if (att.type === 'image') {
+      contentParts.push({
+        type: 'input_image',
+        source: { type: 'base64', media_type: att.mime, data: att.base64 }
+      });
+    } else {
+      contentParts.push({
+        type: 'input_file',
+        source: { type: 'base64', media_type: att.mime, data: att.base64, filename: att.name }
+      });
+    }
+  }
+  
+  if (!lastMsg?.content && contentParts.length > 0) {
+    contentParts.unshift({ type: 'input_text', text: 'Here is the attached file.' });
+  }
+  
+  input.push({ type: 'message', role: 'user', content: contentParts });
+  
+  return input;
+}
+
+// ══════════════════════════════════════════════
+// ── Send Message ──
+// ══════════════════════════════════════════════
+async function sendMessage() {
+  const inputEl = document.getElementById('inputBox');
+  const text = inputEl.value.trim();
+  if ((!text && pendingAttachments.length === 0) || isStreaming) return;
+
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread) return;
+
+  // Capture attachments before clearing
+  const attachments = [...pendingAttachments];
+  const hasAttachments = attachments.length > 0;
+
+  // Build user message
+  const userMessage = {
+    role: 'user',
+    content: text,
+    timestamp: Date.now(),
+    attachments: hasAttachments ? attachments.map(a => ({
+      type: a.type,
+      name: a.name,
+      size: a.size,
+      mime: a.mime,
+      dataUrl: a.type === 'image' ? a.dataUrl : null
+    })) : undefined
+  };
+
+  thread.messages.push(userMessage);
+  
+  // Clear UI
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  pendingAttachments = [];
+  renderAttachmentPreview();
+  updateCharCount();
+  clearDraft();
+  document.getElementById('sendBtn').disabled = true;
+  saveThreads();
+
+  // Route to group or direct send
+  if (thread.mode === 'group') {
+    await sendGroupMessage(thread, text, attachments);
+  } else {
+    await sendDirectMessage(thread, text, attachments);
+  }
+}
+
+// ═══════════════════════════════════════════
+// Direct Message Send
+// ═══════════════════════════════════════════
+async function sendDirectMessage(thread, text, attachments) {
+  const hasAttachments = attachments.length > 0;
+  
+  renderMessages();
+
+  // Add placeholder assistant message
+  const directAgentId = thread.agentId || 'main';
+  thread.messages.push({ role: 'assistant', content: '', agentId: directAgentId, timestamp: Date.now() });
+  renderMessages();
+
+  const msgIdx = thread.messages.length - 1;
+  const msgEl = document.getElementById(`msg-${msgIdx}`);
+  if (msgEl) msgEl.classList.add('streaming-cursor', `cursor-${directAgentId}`);
+
+  isStreaming = true;
+  _syncPaused = true;
+  setSendButtonStreaming(true);
+  setTypingIndicator(true);
+
+  // Create AbortController for this request
+  currentAbortController = new AbortController();
+
+  try {
+    const textFiles = attachments.filter(a => a.type === 'text-file');
+    const binaryFiles = attachments.filter(a => a.type === 'file' || a.type === 'image');
+    const hasBinaryAttachments = binaryFiles.length > 0;
+
+    let messageContent = text;
+    if (textFiles.length > 0) {
+      const fileBlocks = textFiles.map(f => 
+        `\n\n--- FILE: ${f.name} (${formatBytes(f.size)}) ---\n${f.textContent}\n--- END FILE ---`
+      ).join('');
+      messageContent = (text || 'Here are the attached files:') + fileBlocks;
+    }
+
+    let response;
+
+    if (hasBinaryAttachments) {
+      const inputItems = buildResponsesInput(
+        [...thread.messages.slice(0, -2), { role: 'user', content: messageContent }],
+        binaryFiles
+      );
+
+      response = await fetch(GATEWAY_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GATEWAY_TOKEN}`,
+          'Content-Type': 'application/json',
+          'x-clawdbot-agent-id': directAgentId
+        },
+        body: JSON.stringify({
+          model: `clawdbot:${directAgentId}`,
+          input: inputItems,
+          stream: true,
+          user: `vektor-terminal-${activeThreadId}`
+        }),
+        signal: currentAbortController.signal
+      });
+    } else {
+      const apiMessages = thread.messages.slice(0, -1).map((m, i) => ({
+        role: m.role,
+        content: (i === thread.messages.length - 2) ? messageContent : m.content
+      }));
+
+      response = await fetch(GATEWAY_URL_LEGACY, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GATEWAY_TOKEN}`,
+          'Content-Type': 'application/json',
+          'x-clawdbot-agent-id': directAgentId
+        },
+        body: JSON.stringify({
+          model: `clawdbot:${directAgentId}`,
+          messages: apiMessages,
+          stream: true,
+          user: `vektor-terminal-${activeThreadId}`
+        }),
+        signal: currentAbortController.signal
+      });
+    }
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errBody || response.statusText}`);
+    }
+
+    setTypingIndicator(false); // Got first response, hide indicator
+    await streamResponse(response, thread, msgIdx, msgEl);
+
+    // Check for artifacts
+    _lastDetectedLength = 0;
+    checkForArtifacts();
+
+    // Auto-name thread
+    if (thread.messages.length === 2 && thread.name.startsWith('Thread ')) {
+      const firstWords = text.split(' ').slice(0, 5).join(' ');
+      thread.name = firstWords.length > 30 ? firstWords.slice(0, 30) + '…' : firstWords;
+      updateThreadHeader(thread);
+      renderThreadList();
+    }
+
+    saveThreads();
+    renderThreadList();
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      // User stopped generation
+      thread.messages[msgIdx].content += '\n\n*[Generation stopped]*';
+      showToast('Generation stopped');
+    } else {
+      console.error('Stream error:', err);
+      thread.messages[msgIdx].content = `⚠ Error: ${err.message}`;
+    }
+    if (msgEl) {
+      msgEl.classList.remove('streaming-cursor', `cursor-${directAgentId}`);
+      if (err.name === 'AbortError') {
+        msgEl.innerHTML = formatMessage(thread.messages[msgIdx].content);
+        applyHighlighting();
+      } else {
+        msgEl.innerHTML = `<span style="color:#c44">⚠ ${escapeHtml(err.message)}</span>`;
+      }
+    }
+    saveThreads();
+  } finally {
+    isStreaming = false;
+    _syncPaused = false;
+    currentAbortController = null;
+    setSendButtonStreaming(false);
+    setTypingIndicator(false);
+    renderMessages();
+    renderThreadList();
+  }
+}
+
+// ═══════════════════════════════════════════
+// Group Message Send (parallel agents)
+// ═══════════════════════════════════════════
+async function sendGroupMessage(thread, text, attachments) {
+  const hasAttachments = attachments.length > 0;
+  
+  renderMessages();
+
+  // Add placeholder messages for each participant
+  const agentMsgIndices = {};
+  for (const agentId of thread.participants) {
+    thread.messages.push({ role: 'assistant', content: '', agentId, timestamp: Date.now() });
+    agentMsgIndices[agentId] = thread.messages.length - 1;
+  }
+  renderMessages();
+
+  // Add streaming cursors
+  for (const agentId of thread.participants) {
+    const idx = agentMsgIndices[agentId];
+    const el = document.getElementById(`msg-${idx}`);
+    if (el) {
+      el.classList.add('streaming-cursor', `cursor-${agentId}`);
+    }
+  }
+
+  isStreaming = true;
+  _syncPaused = true;
+  activeGroupStreams = thread.participants.length;
+  setSendButtonStreaming(true);
+  setTypingIndicator(true, 'Agents are');
+  currentAbortController = new AbortController();
+
+  // Prepare text file content
+  const textFiles = attachments.filter(a => a.type === 'text-file');
+  const binaryFiles = attachments.filter(a => a.type === 'file' || a.type === 'image');
+  const hasBinaryAttachments = binaryFiles.length > 0;
+
+  let messageContent = text;
+  if (textFiles.length > 0) {
+    const fileBlocks = textFiles.map(f => 
+      `\n\n--- FILE: ${f.name} (${formatBytes(f.size)}) ---\n${f.textContent}\n--- END FILE ---`
+    ).join('');
+    messageContent = (text || 'Here are the attached files:') + fileBlocks;
+  }
+
+  const userMsgIdx = thread.messages.length - thread.participants.length - 1;
+  if (messageContent !== text) {
+    thread.messages[userMsgIdx].content = messageContent;
+  }
+
+  // Fire parallel requests
+  const promises = thread.participants.map(agentId => 
+    streamAgentResponse(thread, agentId, agentMsgIndices[agentId], messageContent, binaryFiles, hasBinaryAttachments)
+  );
+
+  await Promise.allSettled(promises);
+
+  // Auto-name thread
+  const userMsgCount = thread.messages.filter(m => m.role === 'user').length;
+  if (userMsgCount === 1 && thread.name.startsWith('Group ')) {
+    const firstWords = text.split(' ').slice(0, 5).join(' ');
+    thread.name = firstWords.length > 30 ? firstWords.slice(0, 30) + '…' : firstWords;
+    updateThreadHeader(thread);
+    renderThreadList();
+  }
+
+  isStreaming = false;
+  _syncPaused = false;
+  activeGroupStreams = 0;
+  currentAbortController = null;
+  setSendButtonStreaming(false);
+  setTypingIndicator(false);
+  saveThreads();
+  renderMessages();
+  renderThreadList();
+}
+
+// Stream a single agent's response in a group chat
+async function streamAgentResponse(thread, agentId, msgIdx, messageContent, binaryFiles, hasBinaryAttachments) {
+  const agent = AGENTS[agentId];
+  const msgEl = document.getElementById(`msg-${msgIdx}`);
+
+  try {
+    let response;
+
+    if (hasBinaryAttachments) {
+      const inputItems = buildGroupResponsesInput(thread, agentId, binaryFiles);
+
+      response = await fetch(GATEWAY_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GATEWAY_TOKEN}`,
+          'Content-Type': 'application/json',
+          'x-clawdbot-agent-id': agentId
+        },
+        body: JSON.stringify({
+          model: `clawdbot:${agentId}`,
+          input: inputItems,
+          stream: true,
+          user: `vektor-terminal-${activeThreadId}`
+        }),
+        signal: currentAbortController?.signal
+      });
+    } else {
+      const apiMessages = buildGroupChatMessages(thread, agentId, messageContent);
+
+      response = await fetch(GATEWAY_URL_LEGACY, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GATEWAY_TOKEN}`,
+          'Content-Type': 'application/json',
+          'x-clawdbot-agent-id': agentId
+        },
+        body: JSON.stringify({
+          model: `clawdbot:${agentId}`,
+          messages: apiMessages,
+          stream: true,
+          user: `vektor-terminal-${activeThreadId}`
+        }),
+        signal: currentAbortController?.signal
+      });
+    }
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errBody || response.statusText}`);
+    }
+
+    await streamResponse(response, thread, msgIdx, msgEl);
+
+    _lastDetectedLength = 0;
+    checkForArtifactsAtIndex(msgIdx);
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      thread.messages[msgIdx].content += '\n\n*[Generation stopped]*';
+      if (msgEl) {
+        msgEl.classList.remove('streaming-cursor', `cursor-${agentId}`);
+        msgEl.innerHTML = formatMessage(thread.messages[msgIdx].content);
+        applyHighlighting();
+      }
+    } else {
+      console.error(`[${agent.name}] Stream error:`, err);
+      thread.messages[msgIdx].content = `⚠ Error: ${err.message}`;
+      if (msgEl) {
+        msgEl.classList.remove('streaming-cursor', `cursor-${agentId}`);
+        msgEl.innerHTML = `<span style="color:#c44">⚠ ${escapeHtml(err.message)}</span>`;
+      }
+    }
+  } finally {
+    activeGroupStreams--;
+    saveThreads();
+  }
+}
+
+// ═══════════════════════════════════════════
+// Shared SSE Stream Reader
+// ═══════════════════════════════════════════
+async function streamResponse(response, thread, msgIdx, msgEl) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+  let firstChunk = true;
+  var _streamRenderPending = false;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') continue;
+
+      try {
+        const parsed = JSON.parse(data);
+        
+        let delta;
+        if (parsed.choices?.[0]?.delta?.content) {
+          delta = parsed.choices[0].delta.content;
+        } else if (parsed.type === 'response.output_text.delta' && parsed.delta) {
+          delta = parsed.delta;
+        }
+        
+        if (delta) {
+          if (firstChunk) {
+            setTypingIndicator(false);
+            firstChunk = false;
+          }
+          fullText += delta;
+          thread.messages[msgIdx].content = fullText;
+          // Throttle render during streaming to avoid jank on long messages
+          if (!_streamRenderPending) {
+            _streamRenderPending = true;
+            requestAnimationFrame(() => {
+              _streamRenderPending = false;
+              if (msgEl) msgEl.innerHTML = formatMessage(fullText);
+              applyHighlighting();
+              scrollToBottom();
+            });
+          }
+        }
+      } catch {}
+    }
+  }
+
+  // Finalize
+  thread.messages[msgIdx].content = fullText;
+  if (msgEl) {
+    msgEl.classList.remove('streaming-cursor', 'cursor-main', 'cursor-anima');
+    msgEl.innerHTML = formatMessage(fullText);
+    applyHighlighting();
+  }
+}
+
+// ══════════════════════════════════════════════
+// ── Code Block Copy / Canvas Actions ──
+// ══════════════════════════════════════════════
+function copyCodeBlockB64(btn, b64) {
+  try {
+    const text = decodeURIComponent(escape(atob(b64)));
+    navigator.clipboard.writeText(text).then(() => {
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Copied`;
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = origHtml; btn.classList.remove('copied'); }, 1500);
+    });
+  } catch(e) {
+    const code = btn.closest('.code-block-wrapper')?.querySelector('code');
+    if (code) navigator.clipboard.writeText(code.textContent);
+    showToast('Copied!');
+  }
+}
+
+function openCodeInCanvasB64(b64, langLabel) {
+  try {
+    const text = decodeURIComponent(escape(atob(b64)));
+    const lang = langLabel?.toLowerCase() || '';
+    const isRenderable = isRenderableHtml(text);
+    const type = isRenderable ? 'html' : 'code';
+    const title = generateArtifactTitle(text, lang, isRenderable);
+    openCanvas(text, title, type, lang);
+  } catch(e) {
+    showToast('Failed to open in canvas');
+  }
+}
+
+// Detect if content is renderable HTML
+function isRenderableHtml(text) {
+  const t = text.trim().toLowerCase();
+  if (t.startsWith('<!doctype') || t.startsWith('<html')) return true;
+  if (t.includes('<head') && t.includes('<body')) return true;
+  // Has HTML tags and CSS or scripts
+  const hasTags = /<[a-z][\s\S]*>/i.test(text);
+  const hasStyle = /<style/i.test(text) || /style\s*=/i.test(text);
+  const hasStructure = /<div|<section|<main|<header|<nav|<canvas/i.test(text);
+  if (hasTags && (hasStyle || hasStructure)) return true;
+  return false;
+}
+
+// Auto-generate title from code content
+function generateArtifactTitle(text, lang, isHtml) {
+  if (isHtml) {
+    const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
+    if (titleMatch) return titleMatch[1].trim();
+    const h1Match = text.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    if (h1Match) return h1Match[1].trim();
+  }
+  // For markdown
+  const mdTitle = text.match(/^#\s+(.+)$/m);
+  if (mdTitle) return mdTitle[1].trim();
+  // Python/JS docstrings and comments
+  const docstringMatch = text.match(/^(?:"""|\'\'\')(.*?)(?:"""|\'\'\')/s);
+  if (docstringMatch && docstringMatch[1].trim().length > 0 && docstringMatch[1].trim().length < 80) {
+    return docstringMatch[1].trim().split('\n')[0].replace(/^[\s#/*'"]+|[\s#/*'"]+$/g, '');
+  }
+  const commentMatch = text.match(/^(?:\/\/|#|\/\*)\s*(.+?)(?:\*\/)?$/m);
+  if (commentMatch && commentMatch[1].trim().length < 60) return commentMatch[1].trim();
+  // Function/class name
+  const funcMatch = text.match(/(?:function|def|class|const|let|var)\s+(\w+)/);
+  if (funcMatch) return `${funcMatch[1]} — ${lang || 'code'}`;
+  // Fallback: use first meaningful non-empty line, strip common prefixes
+  const lines = text.trim().split('\n').filter(l => l.trim() && !l.trim().startsWith('import') && !l.trim().startsWith('from'));
+  if (lines[0] && lines[0].length < 60) {
+    const cleaned = lines[0].trim().replace(/^[#</*"'`]+\s*/, '').replace(/[#</*"'`]+\s*$/, '');
+    if (cleaned.length > 3) return cleaned;
+  }
+  return lang ? `${lang.charAt(0).toUpperCase() + lang.slice(1)} Snippet` : 'Code';
+}
+
+// ══════════════════════════════════════════════
+// ── Canvas System ──
+// ══════════════════════════════════════════════
+let canvasArtifacts = [];
+let activeArtifactId = null;
+let canvasViewMode = 'preview'; // 'preview' | 'code'
+let canvasResizing = false;
+
+function openCanvas(content, title, type = 'code', language = '') {
+  const id = 'artifact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+  
+  // Check for existing artifact with same title — update it (new version)
+  const existing = canvasArtifacts.find(a => a.title === title);
+  if (existing) {
+    // Store version history
+    if (!existing.versions) existing.versions = [];
+    existing.versions.push({
+      content: existing.content,
+      timestamp: existing.updatedAt || Date.now()
+    });
+    existing.content = content;
+    existing.type = type;
+    existing.language = language || existing.language;
+    existing.updatedAt = Date.now();
+    activeArtifactId = existing.id;
+  } else {
+    const artifact = {
+      id,
+      title,
+      content,
+      type, // 'html' | 'code' | 'markdown'
+      language: language || (type === 'html' ? 'html' : 'text'),
+      versions: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    canvasArtifacts.push(artifact);
+    activeArtifactId = id;
+  }
+  
+  // Default to preview for HTML, code for others
+  if (type === 'html') {
+    canvasViewMode = 'preview';
+  } else if (type === 'markdown') {
+    canvasViewMode = 'preview';
+  } else {
+    canvasViewMode = 'code';
+  }
+  
+  const panel = document.getElementById('canvasPanel');
+  const handle = document.getElementById('canvasResizeHandle');
+  panel.classList.add('open');
+  handle.classList.add('visible');
+  
+  updateCanvasHeader();
+  renderCanvasBody();
+  updateCanvasFooter();
+}
+
+function closeCanvas() {
+  const panel = document.getElementById('canvasPanel');
+  const handle = document.getElementById('canvasResizeHandle');
+  panel.classList.remove('open');
+  handle.classList.remove('visible');
+  // Reset any inline styles from resize dragging
+  panel.style.width = '';
+  panel.style.minWidth = '';
+  panel.style.maxWidth = '';
+  // Close version panel too
+  document.getElementById('canvasVersionPanel').classList.remove('open');
+}
+
+function switchArtifact(id) {
+  activeArtifactId = id;
+  const artifact = canvasArtifacts.find(a => a.id === id);
+  if (artifact) {
+    // Reset view mode for this artifact type
+    if (artifact.type === 'html' || artifact.type === 'markdown') {
+      canvasViewMode = 'preview';
+    } else {
+      canvasViewMode = 'code';
+    }
+  }
+  // Ensure panel is open
+  const panel = document.getElementById('canvasPanel');
+  const handle = document.getElementById('canvasResizeHandle');
+  if (!panel.classList.contains('open')) {
+    panel.classList.add('open');
+    handle.classList.add('visible');
+  }
+  closeArtifactDropdown();
+  document.getElementById('canvasVersionPanel').classList.remove('open');
+  updateCanvasHeader();
+  renderCanvasBody();
+  updateCanvasFooter();
+}
+
+function removeArtifact(id, e) {
+  e?.stopPropagation();
+  canvasArtifacts = canvasArtifacts.filter(a => a.id !== id);
+  if (activeArtifactId === id) {
+    activeArtifactId = canvasArtifacts[canvasArtifacts.length - 1]?.id || null;
+  }
+  if (canvasArtifacts.length === 0) {
+    closeCanvas();
+  } else {
+    closeArtifactDropdown();
+    updateCanvasHeader();
+    renderCanvasBody();
+    updateCanvasFooter();
+  }
+}
+
+function switchCanvasTab(tab) {
+  canvasViewMode = tab;
+  document.getElementById('canvasTabPreview').classList.toggle('active', tab === 'preview');
+  document.getElementById('canvasTabCode').classList.toggle('active', tab === 'code');
+  renderCanvasBody();
+}
+
+// ── Canvas Header ──
+function updateCanvasHeader() {
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  
+  // Update artifact count
+  const count = canvasArtifacts.length;
+  document.getElementById('canvasArtifactCount').textContent = count;
+  document.getElementById('canvasArtifactPlural').textContent = count === 1 ? '' : 's';
+  
+  if (!artifact) {
+    document.getElementById('canvasTitle').textContent = 'No artifacts';
+    document.getElementById('canvasLangTag').textContent = '';
+    document.getElementById('canvasArtifactSelect').style.display = 'none';
+    return;
+  }
+  
+  document.getElementById('canvasArtifactSelect').style.display = count > 1 ? 'block' : 'none';
+  document.getElementById('canvasArtifactCount').textContent = count;
+  document.getElementById('canvasArtifactPlural').textContent = count === 1 ? '' : 's';
+  document.getElementById('canvasTitle').textContent = artifact.title;
+  document.getElementById('canvasLangTag').textContent = artifact.language?.toUpperCase() || artifact.type.toUpperCase();
+  
+  // Update tab states
+  const previewTab = document.getElementById('canvasTabPreview');
+  const codeTab = document.getElementById('canvasTabCode');
+  previewTab.classList.toggle('active', canvasViewMode === 'preview');
+  codeTab.classList.toggle('active', canvasViewMode === 'code');
+  
+  // Disable preview tab for non-renderable code
+  if (artifact.type === 'code') {
+    previewTab.style.opacity = '0.4';
+    previewTab.style.pointerEvents = 'none';
+  } else {
+    previewTab.style.opacity = '1';
+    previewTab.style.pointerEvents = 'auto';
+  }
+}
+
+// ── Canvas Body ──
+function renderCanvasBody() {
+  const body = document.getElementById('canvasBody');
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  
+  // Preserve version panel
+  const versionPanel = document.getElementById('canvasVersionPanel');
+  const versionPanelOpen = versionPanel?.classList.contains('open');
+  
+  if (!artifact) {
+    body.innerHTML = `
+      <div class="canvas-empty">
+        <div class="canvas-empty-icon">◫</div>
+        <div class="canvas-empty-text">NO ARTIFACTS</div>
+      </div>`;
+    body.appendChild(versionPanel);
+    return;
+  }
+  
+  if (canvasViewMode === 'preview') {
+    if (artifact.type === 'html') {
+      body.innerHTML = `<div class="canvas-body-iframe">
+        <iframe class="canvas-iframe" sandbox="allow-scripts allow-same-origin" id="canvasIframe"></iframe>
+      </div>`;
+      const iframe = document.getElementById('canvasIframe');
+      // Inject dark bg for partial HTML
+      let htmlContent = artifact.content;
+      if (!htmlContent.includes('<html') && !htmlContent.includes('<!DOCTYPE')) {
+        htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { margin: 0; }</style></head><body>${htmlContent}</body></html>`;
+      }
+      iframe.srcdoc = htmlContent;
+    } else if (artifact.type === 'markdown') {
+      body.innerHTML = `<div class="canvas-body-scroll">
+        <div class="canvas-markdown">${renderCanvasMarkdownFull(artifact.content)}</div>
+      </div>`;
+    } else {
+      // Code type — show code view even in "preview"
+      renderCanvasCodeView(body, artifact);
+    }
+  } else {
+    // Code view
+    renderCanvasCodeView(body, artifact);
+  }
+  
+  // Re-add version panel
+  body.appendChild(versionPanel);
+  if (versionPanelOpen) {
+    versionPanel.classList.add('open');
+    renderVersionList();
+  }
+}
+
+function renderCanvasCodeView(container, artifact) {
+  const langClass = artifact.language ? `language-${artifact.language.toLowerCase()}` : 'language-plaintext';
+  const lines = artifact.content.split('\n');
+  const lineNums = lines.map((_, i) => `<span>${i + 1}</span>`).join('');
+  
+  container.innerHTML = `<div class="canvas-code-view">
+    <div style="display:flex;height:100%;overflow:auto;">
+      <div class="code-line-numbers" style="padding:16px 12px 16px 12px;">${lineNums}</div>
+      <pre style="flex:1;margin:0;padding:16px;overflow:visible;"><code class="${langClass}" id="canvasCodeBlock">${escapeHtml(artifact.content)}</code></pre>
+    </div>
+  </div>`;
+  
+  // Apply highlighting
+  const codeEl = document.getElementById('canvasCodeBlock');
+  if (codeEl) {
+    try { hljs.highlightElement(codeEl); } catch(e) {}
+  }
+}
+
+function updateCanvasFooter() {
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  if (!artifact) {
+    document.getElementById('canvasFooterInfo').textContent = 'No artifacts';
+    document.getElementById('canvasVersionCount').textContent = '';
+    return;
+  }
+  
+  const lines = artifact.content.split('\n').length;
+  const chars = artifact.content.length;
+  document.getElementById('canvasFooterInfo').textContent = `${lines} lines · ${chars.toLocaleString()} chars`;
+  
+  const versions = artifact.versions?.length || 0;
+  document.getElementById('canvasVersionCount').textContent = versions > 0 ? `v${versions + 1} · ${versions} prior` : 'v1';
+}
+
+// ── Artifact Dropdown ──
+function toggleArtifactDropdown(e) {
+  e?.stopPropagation();
+  const dropdown = document.getElementById('canvasArtifactDropdown');
+  const isOpen = dropdown.classList.contains('open');
+  
+  if (isOpen) {
+    closeArtifactDropdown();
+    return;
+  }
+  
+  dropdown.innerHTML = canvasArtifacts.map(a => `
+    <button class="canvas-artifact-option ${a.id === activeArtifactId ? 'active' : ''}"
+            onclick="switchArtifact('${a.id}')">
+      <span class="canvas-artifact-option-icon">${a.type === 'html' ? '◇' : a.type === 'markdown' ? '☰' : '⟨⟩'}</span>
+      <span class="canvas-artifact-option-title">${escapeHtml(a.title)}</span>
+    </button>
+  `).join('');
+  
+  dropdown.classList.add('open');
+  
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', closeArtifactDropdownHandler, { once: true });
+  }, 10);
+}
+
+function closeArtifactDropdownHandler(e) {
+  if (!e.target.closest('.canvas-artifact-select')) {
+    closeArtifactDropdown();
+  }
+}
+
+function closeArtifactDropdown() {
+  document.getElementById('canvasArtifactDropdown').classList.remove('open');
+}
+
+// ── Canvas Actions ──
+function copyCanvasContent() {
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  if (!artifact) return;
+  navigator.clipboard.writeText(artifact.content).then(() => {
+    showToast('Copied to clipboard');
+  });
+}
+
+function downloadCanvasContent() {
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  if (!artifact) return;
+  
+  let filename, mimeType;
+  if (artifact.type === 'html') {
+    filename = (artifact.title.replace(/[^a-zA-Z0-9_-]/g, '_') || 'artifact') + '.html';
+    mimeType = 'text/html';
+  } else if (artifact.type === 'markdown') {
+    filename = (artifact.title.replace(/[^a-zA-Z0-9_-]/g, '_') || 'artifact') + '.md';
+    mimeType = 'text/markdown';
+  } else {
+    const ext = artifact.language ? `.${artifact.language.toLowerCase()}` : '.txt';
+    filename = (artifact.title.replace(/[^a-zA-Z0-9_-]/g, '_') || 'artifact') + ext;
+    mimeType = 'text/plain';
+  }
+  
+  const blob = new Blob([artifact.content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Downloaded ${filename}`);
+}
+
+function openCanvasInNewTab() {
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  if (!artifact) return;
+  
+  if (artifact.type === 'html') {
+    const blob = new Blob([artifact.content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    // Clean up after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } else {
+    // For non-HTML, open as text in new tab
+    const blob = new Blob([artifact.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+}
+
+// ── Version History ──
+function toggleVersionHistory() {
+  const panel = document.getElementById('canvasVersionPanel');
+  const isOpen = panel.classList.contains('open');
+  
+  if (isOpen) {
+    panel.classList.remove('open');
+  } else {
+    renderVersionList();
+    panel.classList.add('open');
+  }
+}
+
+function renderVersionList() {
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  const list = document.getElementById('canvasVersionList');
+  
+  if (!artifact || !artifact.versions || artifact.versions.length === 0) {
+    list.innerHTML = `<div style="padding:12px;color:var(--text-tertiary);font-size:11px;text-align:center;">No previous versions</div>`;
+    return;
+  }
+  
+  // Current version + history
+  const versions = [
+    { content: artifact.content, timestamp: artifact.updatedAt, isCurrent: true },
+    ...artifact.versions.map(v => ({ ...v, isCurrent: false })).reverse()
+  ];
+  
+  list.innerHTML = versions.map((v, i) => `
+    <div class="canvas-version-item ${v.isCurrent ? 'active' : ''}"
+         onclick="restoreVersion(${i}, ${v.isCurrent})">
+      <div>${v.isCurrent ? 'Current' : 'Version ' + (versions.length - i)}</div>
+      <div class="canvas-version-item-time">${formatTimestamp(v.timestamp)}</div>
+    </div>
+  `).join('');
+}
+
+function restoreVersion(versionIndex, isCurrent) {
+  if (isCurrent) return;
+  
+  const artifact = canvasArtifacts.find(a => a.id === activeArtifactId);
+  if (!artifact || !artifact.versions) return;
+  
+  // The version list is [current, newest_old, ..., oldest_old]
+  // The versions array in artifact is [oldest, ..., newest]
+  const reversedIdx = artifact.versions.length - versionIndex; // Map back to original index
+  const targetVersion = artifact.versions[reversedIdx];
+  if (!targetVersion) return;
+  
+  // Save current as a version
+  artifact.versions.push({
+    content: artifact.content,
+    timestamp: artifact.updatedAt
+  });
+  
+  // Restore
+  artifact.content = targetVersion.content;
+  artifact.updatedAt = Date.now();
+  
+  renderCanvasBody();
+  updateCanvasFooter();
+  renderVersionList();
+  showToast('Version restored');
+}
+
+// ── Resize Handle ──
+function initCanvasResize() {
+  const handle = document.getElementById('canvasResizeHandle');
+  const panel = document.getElementById('canvasPanel');
+  const app = document.getElementById('app');
+  
+  let startX, startWidth;
+  
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    canvasResizing = true;
+    startX = e.clientX;
+    startWidth = panel.getBoundingClientRect().width;
+    
+    handle.classList.add('dragging');
+    document.body.classList.add('resizing');
+    panel.classList.add('no-transition');
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+  
+  function onMouseMove(e) {
+    if (!canvasResizing) return;
+    const dx = startX - e.clientX;
+    const appWidth = app.getBoundingClientRect().width;
+    let newWidth = startWidth + dx;
+    
+    // Enforce limits: min 300px, max 70% of app
+    const maxWidth = appWidth * 0.7;
+    const minWidth = 300;
+    newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+    
+    panel.style.width = newWidth + 'px';
+    panel.style.minWidth = newWidth + 'px';
+    panel.style.maxWidth = newWidth + 'px';
+  }
+  
+  function onMouseUp() {
+    canvasResizing = false;
+    handle.classList.remove('dragging');
+    document.body.classList.remove('resizing');
+    panel.classList.remove('no-transition');
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+}
+
+// Canvas markdown renderer
+function renderCanvasMarkdownFull(text) {
+  if (!text) return '';
+  // Re-use the main markdown renderer
+  return renderMarkdown(text);
+}
+
+// ══════════════════════════════════════════════
+// ── Artifact Detection ──
+// ══════════════════════════════════════════════
+function detectArtifacts(text) {
+  const artifacts = [];
+  const lines = text.split('\n');
+  let i = 0;
+  
+  while (i < lines.length) {
+    const line = lines[i];
+    
+    const openMatch = line.match(/^(`{3,})(markdown|html)\s*$/);
+    if (openMatch) {
+      const fenceChar = openMatch[1];
+      const lang = openMatch[2];
+      const fenceLen = fenceChar.length;
+      const contentLines = [];
+      let depth = 0;
+      i++;
+      
+      while (i < lines.length) {
+        const innerLine = lines[i];
+        const fenceMatch = innerLine.match(/^(`{3,})(\w*)\s*$/);
+        if (fenceMatch) {
+          const innerFenceLen = fenceMatch[1].length;
+          const innerLang = fenceMatch[2];
+          
+          if (innerFenceLen >= fenceLen && !innerLang && depth === 0) {
+            break;
+          } else if (innerLang) {
+            depth++;
+            contentLines.push(innerLine);
+          } else if (depth > 0) {
+            depth--;
+            contentLines.push(innerLine);
+          } else {
+            contentLines.push(innerLine);
+          }
+        } else {
+          contentLines.push(innerLine);
+        }
+        i++;
+      }
+      
+      const content = contentLines.join('\n');
+      
+      if (lang === 'markdown') {
+        const titleMatch = content.match(/^#\s+(.+)$/m);
+        artifacts.push({
+          content,
+          title: titleMatch ? titleMatch[1] : 'Document',
+          type: 'markdown'
+        });
+      } else if (lang === 'html') {
+        const titleMatch = content.match(/<title>([^<]+)<\/title>/);
+        artifacts.push({
+          content,
+          title: titleMatch ? titleMatch[1] : 'HTML Preview',
+          type: 'html'
+        });
+      }
+    }
+    i++;
+  }
+  
+  if (artifacts.length === 0) {
+    const trimmed = text.trim();
+    const headingCount = (trimmed.match(/^#{1,3}\s+.+$/gm) || []).length;
+    if (headingCount >= 3 && trimmed.length > 500 && trimmed.startsWith('#')) {
+      const titleMatch = trimmed.match(/^#\s+(.+)$/m);
+      artifacts.push({
+        content: trimmed,
+        title: titleMatch ? titleMatch[1] : 'Document',
+        type: 'markdown'
+      });
+    }
+  }
+  
+  return artifacts;
+}
+
+let _lastDetectedLength = 0;
+
+function checkForArtifacts() {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || thread.messages.length === 0) return;
+  
+  const lastMsg = thread.messages[thread.messages.length - 1];
+  if (lastMsg.role !== 'assistant' || !lastMsg.content) return;
+  
+  if (lastMsg.content.length <= _lastDetectedLength + 100) return;
+  _lastDetectedLength = lastMsg.content.length;
+  
+  const artifacts = detectArtifacts(lastMsg.content);
+  artifacts.forEach(a => {
+    if (a.content.length > 200) {
+      openCanvas(a.content, a.title, a.type);
+    }
+  });
+}
+
+function checkForArtifactsAtIndex(msgIdx) {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || !thread.messages[msgIdx]) return;
+  
+  const msg = thread.messages[msgIdx];
+  if (msg.role !== 'assistant' || !msg.content) return;
+  
+  const artifacts = detectArtifacts(msg.content);
+  artifacts.forEach(a => {
+    if (a.content.length > 200) {
+      openCanvas(a.content, a.title, a.type);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+// ── Boot ──
+// ══════════════════════════════════════════════
+init();
+initCanvasResize();
+
+// Close artifact dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.canvas-artifact-select')) {
+    closeArtifactDropdown();
+  }
+});
+
+// Electron detection — add class for native app styling
+if (window.vektor?.isElectron) {
+  document.documentElement.classList.add('electron-app');
+}
+</script>
+</body>
+</html>
