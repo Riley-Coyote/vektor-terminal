@@ -2384,10 +2384,10 @@
     color: var(--text-primary);
     margin-bottom: 3px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
     min-width: 0;
-    overflow: hidden;
+    line-height: 1.4;
   }
   .browse-item-desc {
     font-size: 11px;
@@ -2410,12 +2410,15 @@
   }
   .browse-tag {
     display: inline-flex;
-    padding: 1px 6px;
+    flex-shrink: 0;
+    padding: 2px 6px;
     border-radius: 3px;
     font-size: 9px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    line-height: 1.2;
+    margin-top: 1px;
   }
   .browse-tag.builtin { background: rgba(212, 165, 116, 0.12); color: var(--accent); }
   .browse-tag.custom { background: rgba(130, 200, 130, 0.12); color: #82c882; }
@@ -2440,12 +2443,17 @@
   }
   .history-item {
     padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
   .history-item-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
   }
   .history-time {
     font-size: 10px;
@@ -2461,7 +2469,8 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
+    word-break: break-word;
   }
   .history-meta {
     display: flex;
@@ -3123,6 +3132,10 @@ function loadThreads() {
     threads = raw ? JSON.parse(raw) : [];
   } catch { threads = []; }
 }
+
+window.addEventListener('beforeunload', () => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(threads)); } catch {}
+});
 
 function saveThreads() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
