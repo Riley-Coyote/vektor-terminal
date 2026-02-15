@@ -46,9 +46,9 @@
     --text-primary: #e4e6ea;
     --text-secondary: #8b8f96;
     --text-tertiary: #555963;
-    --accent: #A78BFA;
-    --accent-dim: #7C6BC4;
-    --accent-glow: rgba(167, 139, 250, 0.08);
+    --accent: #8EC3E3;
+    --accent-dim: #6A9DBD;
+    --accent-glow: rgba(142, 195, 227, 0.08);
     --scrollbar-thumb: rgba(255, 255, 255, 0.1);
     --scrollbar-track: transparent;
     --user-bubble: rgba(255, 255, 255, 0.06);
@@ -572,8 +572,8 @@
 
   /* Agent-specific avatar colors for group chat */
   .message.assistant.agent-main .message-avatar {
-    background: rgba(167, 139, 250, 0.08);
-    color: #A78BFA;
+    background: rgba(142, 195, 227, 0.08);
+    color: #8EC3E3;
   }
 
   .message.assistant.agent-anima .message-avatar {
@@ -599,7 +599,7 @@
   .message.assistant .message-role { color: var(--accent-dim); }
 
   /* Agent-specific role colors */
-  .message.assistant.agent-main .message-role { color: #7C6BC4; }
+  .message.assistant.agent-main .message-role { color: #6A9DBD; }
   .message.assistant.agent-anima .message-role { color: #556b8a; }
 
   /* ═══════════════════════════════════════════ */
@@ -838,7 +838,7 @@
 
   /* Override highlight.js theme to match our dark aesthetic */
   .code-block-code .hljs { background: transparent !important; color: #cccccc; padding: 0; }
-  .code-block-code .hljs-keyword { color: #A78BFA; }
+  .code-block-code .hljs-keyword { color: #8EC3E3; }
   .code-block-code .hljs-string { color: #a5d6a7; }
   .code-block-code .hljs-number { color: #e6b07c; }
   .code-block-code .hljs-comment { color: #546e7a; font-style: italic; }
@@ -849,23 +849,23 @@
   .code-block-code .hljs-built_in { color: #b8937a; }
   .code-block-code .hljs-literal { color: #e6b07c; }
   .code-block-code .hljs-type { color: #c4a882; }
-  .code-block-code .hljs-attr { color: #A78BFA; }
+  .code-block-code .hljs-attr { color: #8EC3E3; }
   .code-block-code .hljs-property { color: #c9d1d9; }
   .code-block-code .hljs-variable { color: #c9d1d9; }
-  .code-block-code .hljs-variable.language_ { color: #A78BFA; }
+  .code-block-code .hljs-variable.language_ { color: #8EC3E3; }
   .code-block-code .hljs-operator { color: #e6b07c; }
   .code-block-code .hljs-punctuation { color: #6a737d; }
-  .code-block-code .hljs-meta { color: #7C6BC4; }
-  .code-block-code .hljs-meta .hljs-keyword { color: #7C6BC4; }
+  .code-block-code .hljs-meta { color: #6A9DBD; }
+  .code-block-code .hljs-meta .hljs-keyword { color: #6A9DBD; }
   .code-block-code .hljs-regexp { color: #a5d6a7; }
-  .code-block-code .hljs-selector-tag { color: #A78BFA; }
+  .code-block-code .hljs-selector-tag { color: #8EC3E3; }
   .code-block-code .hljs-selector-class { color: #e0c097; }
   .code-block-code .hljs-selector-id { color: #e0c097; }
-  .code-block-code .hljs-tag { color: #A78BFA; }
-  .code-block-code .hljs-name { color: #A78BFA; }
+  .code-block-code .hljs-tag { color: #8EC3E3; }
+  .code-block-code .hljs-name { color: #8EC3E3; }
   .code-block-code .hljs-attribute { color: #e0c097; }
   .code-block-code .hljs-symbol { color: #e6b07c; }
-  .code-block-code .hljs-bullet { color: #A78BFA; }
+  .code-block-code .hljs-bullet { color: #8EC3E3; }
   .code-block-code .hljs-addition { color: #a5d6a7; }
   .code-block-code .hljs-deletion { color: #c44; }
   .code-block-code .hljs-section { color: #e0c097; font-weight: 600; }
@@ -920,7 +920,7 @@
     padding: 8px 14px;
     margin: 10px 0;
     color: var(--text-secondary);
-    background: rgba(167, 139, 250, 0.03);
+    background: rgba(142, 195, 227, 0.03);
     border-radius: 0 6px 6px 0;
   }
 
@@ -1010,7 +1010,7 @@
   }
 
   /* Agent-specific streaming cursors */
-  .streaming-cursor.cursor-main::after { color: #A78BFA; }
+  .streaming-cursor.cursor-main::after { color: #8EC3E3; }
   .streaming-cursor.cursor-anima::after { color: #7b8fb0; }
 
   @keyframes blink {
@@ -1184,13 +1184,13 @@
     -webkit-app-region: no-drag;
   }
   .notification-bell:hover { color: var(--text-primary); }
-  .notification-bell.has-unread { color: var(--accent, #A78BFA); }
+  .notification-bell.has-unread { color: var(--accent, #8EC3E3); }
 
   .notification-badge {
     position: absolute;
     top: 0;
     right: 0;
-    background: var(--accent, #A78BFA);
+    background: var(--accent, #8EC3E3);
     color: #080808;
     font-size: 9px;
     font-weight: 700;
@@ -1277,7 +1277,7 @@
   }
   .notification-item:hover { background: rgba(255,255,255,0.03); }
   .notification-item.unread {
-    border-left-color: var(--accent, #A78BFA);
+    border-left-color: var(--accent, #8EC3E3);
     background: rgba(212,165,116,0.04);
   }
 
@@ -1295,7 +1295,7 @@
   }
   .notification-item.unread .notification-icon {
     background: rgba(212,165,116,0.12);
-    color: var(--accent, #A78BFA);
+    color: var(--accent, #8EC3E3);
   }
 
   .notification-content {
@@ -1953,7 +1953,7 @@
   .canvas-artifact-option.active {
     background: var(--accent-glow);
     color: var(--accent);
-    border: 1px solid rgba(167, 139, 250, 0.15);
+    border: 1px solid rgba(142, 195, 227, 0.15);
   }
 
   .canvas-artifact-option:not(.active) {
@@ -2342,7 +2342,7 @@
   .canvas-version-item.active {
     background: var(--accent-glow);
     color: var(--accent);
-    border-color: rgba(167, 139, 250, 0.15);
+    border-color: rgba(142, 195, 227, 0.15);
   }
 
   .canvas-version-item-time {
@@ -2603,14 +2603,14 @@
     line-height: 1.2;
     margin-top: 1px;
   }
-  .browse-tag.builtin { background: rgba(167, 139, 250, 0.12); color: var(--accent); }
+  .browse-tag.builtin { background: rgba(142, 195, 227, 0.12); color: var(--accent); }
   .browse-tag.custom { background: rgba(130, 200, 130, 0.12); color: #82c882; }
   .browse-tag.clawdhub { background: rgba(130, 160, 220, 0.12); color: #82a0dc; }
   .browse-tag.node { background: rgba(130, 200, 130, 0.1); color: #6b9; }
   .browse-tag.python { background: rgba(80, 130, 200, 0.1); color: #68a; }
   .browse-tag.rust { background: rgba(200, 120, 60, 0.1); color: #c86; }
   .browse-tag.git { background: rgba(200, 100, 80, 0.1); color: #c64; }
-  .browse-tag.main { background: rgba(167, 139, 250, 0.12); color: var(--accent); }
+  .browse-tag.main { background: rgba(142, 195, 227, 0.12); color: var(--accent); }
   .browse-tag.anima { background: rgba(123, 143, 176, 0.12); color: #7b8fb0; }
   .browse-tag.enabled { background: rgba(100, 200, 100, 0.12); color: #6c6; }
   .browse-tag.disabled { background: rgba(200, 100, 100, 0.12); color: #c66; }
@@ -3172,9 +3172,9 @@ const AGENTS = {
     id: 'main',
     name: 'VEKTOR',
     glyph: '⏀',
-    accent: '#A78BFA',
-    accentDim: '#7C6BC4',
-    accentGlow: 'rgba(167, 139, 250, 0.08)'
+    accent: '#8EC3E3',
+    accentDim: '#6A9DBD',
+    accentGlow: 'rgba(142, 195, 227, 0.08)'
   },
   anima: {
     id: 'anima',
