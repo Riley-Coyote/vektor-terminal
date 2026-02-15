@@ -1166,6 +1166,187 @@
   /* ═══════════════════════════════════════════ */
   /* Toast Notification                          */
   /* ═══════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════ */
+  /* Notification System                          */
+  /* ═══════════════════════════════════════════ */
+
+  .notification-bell {
+    position: relative;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    -webkit-app-region: no-drag;
+  }
+  .notification-bell:hover { color: var(--text-primary); }
+  .notification-bell.has-unread { color: var(--accent, #d4a574); }
+
+  .notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--accent, #d4a574);
+    color: #080808;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'Geist Mono', monospace;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+  }
+  .notification-bell.has-unread .notification-badge {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .notification-panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    max-height: 420px;
+    background: var(--bg-secondary, #0f0f0f);
+    border: 1px solid var(--border, #2a2a2a);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    z-index: 1200;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .notification-panel.open { display: flex; }
+
+  .notification-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border, #2a2a2a);
+    font-size: 11px;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .notification-panel-header button {
+    background: none;
+    border: none;
+    color: var(--text-tertiary, #555);
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .notification-panel-header button:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .notification-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 4px 0;
+  }
+
+  .notification-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .notification-item:hover { background: rgba(255,255,255,0.03); }
+  .notification-item.unread {
+    border-left-color: var(--accent, #d4a574);
+    background: rgba(212,165,116,0.04);
+  }
+
+  .notification-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-secondary);
+  }
+  .notification-item.unread .notification-icon {
+    background: rgba(212,165,116,0.12);
+    color: var(--accent, #d4a574);
+  }
+
+  .notification-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .notification-title {
+    font-size: 12px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .notification-body {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .notification-time {
+    font-size: 9px;
+    color: var(--text-tertiary, #555);
+    margin-top: 3px;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .notification-empty {
+    padding: 32px 14px;
+    text-align: center;
+    color: var(--text-tertiary, #555);
+    font-size: 11px;
+    font-family: 'Geist Mono', monospace;
+  }
+  .notification-empty-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    opacity: 0.4;
+  }
+
+  /* Pulse animation for new notifications */
+  @keyframes notifPulse {
+    0% { box-shadow: 0 0 0 0 rgba(212,165,116,0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(212,165,116,0); }
+    100% { box-shadow: 0 0 0 0 rgba(212,165,116,0); }
+  }
+  .notification-bell.pulse { animation: notifPulse 0.6s ease-out; }
+
   .toast-container {
     position: fixed;
     bottom: 80px;
@@ -2723,6 +2904,24 @@
       <div class="sidebar-title">
         <span class="title-text">VEKTOR</span>
       </div>
+      <div style="position:relative;">
+        <button class="notification-bell" id="notifBell" onclick="toggleNotificationPanel(event)" title="Notifications">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="notification-badge" id="notifBadge">0</span>
+        </button>
+        <div class="notification-panel" id="notifPanel">
+          <div class="notification-panel-header">
+            <span>Notifications</span>
+            <button onclick="clearAllNotifications()">Clear all</button>
+          </div>
+          <div class="notification-list" id="notifList">
+            <div class="notification-empty">
+              <div class="notification-empty-icon">⏀</div>
+              No notifications
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="new-thread-container">
         <button class="new-thread-btn" onclick="toggleNewThreadDropdown(event)" title="New thread">+</button>
         <div class="new-thread-dropdown" id="newThreadDropdown">
@@ -3322,6 +3521,9 @@ function handleWSEvent(msg) {
     case 'stream_done':
       setTypingIndicator(false);
       break;
+    case 'notification':
+      addNotification(msg.notification);
+      break;
     case 'thread_created':
     case 'thread_updated':
     case 'thread_deleted':
@@ -3332,6 +3534,208 @@ function handleWSEvent(msg) {
       break;
   }
 }
+
+// ══════════════════════════════════════════════
+// ── Notification System ──
+// ══════════════════════════════════════════════
+
+const NOTIF_STORAGE_KEY = 'vektor_notifications';
+const NOTIF_ICONS = {
+  task:    '⚡',
+  build:   '⏀',
+  agent:   '△',
+  review:  '◈',
+  alert:   '⚠',
+  info:    '○',
+  success: '✓',
+  default: '●'
+};
+
+let _notifications = [];
+
+function loadNotifications() {
+  try {
+    const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+    _notifications = raw ? JSON.parse(raw) : [];
+  } catch { _notifications = []; }
+  // Also fetch from server on startup
+  fetchNotifications();
+}
+
+function saveNotifications() {
+  try { localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(_notifications)); } catch {}
+}
+
+async function fetchNotifications() {
+  try {
+    const resp = await fetch('/api/notifications');
+    if (resp.ok) {
+      const serverNotifs = await resp.json();
+      // Merge — server is source of truth for unread state
+      const existingIds = new Set(_notifications.map(n => n.id));
+      for (const n of serverNotifs) {
+        if (!existingIds.has(n.id)) {
+          _notifications.unshift(n);
+        }
+      }
+      // Sort newest first
+      _notifications.sort((a, b) => b.timestamp - a.timestamp);
+      // Cap at 50
+      if (_notifications.length > 50) _notifications = _notifications.slice(0, 50);
+      saveNotifications();
+      renderNotifications();
+    }
+  } catch {}
+}
+
+function addNotification(notif) {
+  const n = {
+    id: notif.id || ('n_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)),
+    type: notif.type || 'info',
+    title: notif.title || 'Notification',
+    body: notif.body || '',
+    timestamp: notif.timestamp || Date.now(),
+    read: false,
+    action: notif.action || null  // { type: 'open-thread', threadId } or { type: 'navigate', url }
+  };
+
+  // Dedupe by id
+  if (_notifications.find(x => x.id === n.id)) return;
+
+  _notifications.unshift(n);
+  if (_notifications.length > 50) _notifications.pop();
+  saveNotifications();
+  renderNotifications();
+
+  // Pulse the bell
+  const bell = document.getElementById('notifBell');
+  bell.classList.remove('pulse');
+  void bell.offsetWidth; // reflow
+  bell.classList.add('pulse');
+
+  // Show a toast too
+  showToast(n.title);
+
+  // Play subtle sound if available
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.value = 0.08;
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch {}
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  const badge = document.getElementById('notifBadge');
+  const bell = document.getElementById('notifBell');
+
+  const unreadCount = _notifications.filter(n => !n.read).length;
+
+  // Badge
+  badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+  bell.classList.toggle('has-unread', unreadCount > 0);
+
+  if (_notifications.length === 0) {
+    list.innerHTML = '<div class="notification-empty"><div class="notification-empty-icon">⏀</div>No notifications</div>';
+    return;
+  }
+
+  list.innerHTML = _notifications.map(n => {
+    const icon = NOTIF_ICONS[n.type] || NOTIF_ICONS.default;
+    const timeStr = formatNotifTime(n.timestamp);
+    const unreadClass = n.read ? '' : ' unread';
+    return `<div class="notification-item${unreadClass}" data-id="${n.id}" onclick="handleNotifClick('${n.id}')">
+      <div class="notification-icon">${icon}</div>
+      <div class="notification-content">
+        <div class="notification-title">${escapeHtml(n.title)}</div>
+        ${n.body ? `<div class="notification-body">${escapeHtml(n.body)}</div>` : ''}
+        <div class="notification-time">${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatNotifTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function handleNotifClick(id) {
+  const notif = _notifications.find(n => n.id === id);
+  if (!notif) return;
+
+  // Mark as read
+  notif.read = true;
+  saveNotifications();
+  renderNotifications();
+  markNotifReadOnServer(id);
+
+  // Handle action
+  if (notif.action) {
+    if (notif.action.type === 'open-thread' && notif.action.threadId) {
+      // Switch to that thread
+      const thread = threads.find(t => t.id === notif.action.threadId);
+      if (thread) {
+        switchPanel('chat');
+        selectThread(thread.id);
+      }
+    }
+  }
+
+  // Close the panel
+  document.getElementById('notifPanel').classList.remove('open');
+}
+
+function toggleNotificationPanel(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('open');
+
+  // Close when clicking outside
+  if (panel.classList.contains('open')) {
+    setTimeout(() => {
+      document.addEventListener('click', closeNotifPanelOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+function closeNotifPanelOnOutside(e) {
+  const panel = document.getElementById('notifPanel');
+  if (!panel.contains(e.target) && e.target.id !== 'notifBell') {
+    panel.classList.remove('open');
+  }
+}
+
+function clearAllNotifications() {
+  _notifications = [];
+  saveNotifications();
+  renderNotifications();
+  fetch('/api/notifications/clear', { method: 'POST' }).catch(() => {});
+}
+
+async function markNotifReadOnServer(id) {
+  try { await fetch(`/api/notifications/${id}/read`, { method: 'POST' }); } catch {}
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Load notifications on startup
+loadNotifications();
 
 // ══════════════════════════════════════════════
 // ── Threads ──

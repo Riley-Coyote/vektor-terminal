@@ -1314,6 +1314,75 @@ app.get('/api/system', async (req, res) => {
 // Serve static assets from /public/
 app.use('/public', express.static(PUBLIC_DIR));
 
+
+// ══════════════════════════════════════════════
+// NOTIFICATION SYSTEM
+// ══════════════════════════════════════════════
+
+const NOTIF_FILE = join(DATA_DIR, 'notifications.json');
+
+function loadNotifStore() {
+  try {
+    if (existsSync(NOTIF_FILE)) return JSON.parse(readFileSync(NOTIF_FILE, 'utf-8'));
+  } catch {}
+  return [];
+}
+
+function saveNotifStore(notifs) {
+  try { writeFileSync(NOTIF_FILE, JSON.stringify(notifs, null, 2)); } catch {}
+}
+
+// GET — fetch all notifications
+app.get('/api/notifications', (req, res) => {
+  const notifs = loadNotifStore();
+  res.json(notifs);
+});
+
+// POST — create a new notification (called by Clawdbot or sub-agents)
+app.post('/api/notifications', (req, res) => {
+  const { type, title, body, action } = req.body;
+  if (!title) return res.status(400).json({ error: 'title required' });
+
+  const notif = {
+    id: 'n_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    type: type || 'info',
+    title,
+    body: body || '',
+    timestamp: Date.now(),
+    read: false,
+    action: action || null
+  };
+
+  const notifs = loadNotifStore();
+  notifs.unshift(notif);
+  // Cap at 100
+  if (notifs.length > 100) notifs.length = 100;
+  saveNotifStore(notifs);
+
+  // Push to all connected WebSocket clients
+  wsBroadcast({ type: 'notification', notification: notif });
+
+  res.json(notif);
+});
+
+// POST — mark single notification as read
+app.post('/api/notifications/:id/read', (req, res) => {
+  const notifs = loadNotifStore();
+  const notif = notifs.find(n => n.id === req.params.id);
+  if (notif) {
+    notif.read = true;
+    saveNotifStore(notifs);
+  }
+  res.json({ ok: true });
+});
+
+// POST — clear all notifications
+app.post('/api/notifications/clear', (req, res) => {
+  saveNotifStore([]);
+  res.json({ ok: true });
+});
+
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({
