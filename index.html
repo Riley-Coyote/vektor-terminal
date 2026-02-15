@@ -1214,19 +1214,19 @@
   }
 
   .notification-panel {
-    position: absolute;
-    top: 100%;
-    right: 0;
+    position: fixed;
     width: 320px;
     max-height: 420px;
-    background: var(--bg-secondary, #0f0f0f);
-    border: 1px solid var(--border, #2a2a2a);
+    background: #111318;
+    border: 1px solid #2a2a2a;
     border-radius: 8px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-    z-index: 1200;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.3);
+    z-index: 10000;
     display: none;
     flex-direction: column;
     overflow: hidden;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .notification-panel.open { display: flex; }
 
@@ -1235,7 +1235,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    border-bottom: 1px solid var(--border, #2a2a2a);
+    border-bottom: 1px solid #2a2a2a;
+    background: #111318;
     font-size: 11px;
     font-family: 'Geist Mono', monospace;
     letter-spacing: 0.06em;
@@ -1263,6 +1264,7 @@
     overflow-y: auto;
     flex: 1;
     padding: 4px 0;
+    background: #111318;
   }
 
   .notification-item {
@@ -2904,24 +2906,10 @@
       <div class="sidebar-title">
         <span class="title-text">VEKTOR</span>
       </div>
-      <div style="position:relative;">
-        <button class="notification-bell" id="notifBell" onclick="toggleNotificationPanel(event)" title="Notifications">
+      <button class="notification-bell" id="notifBell" onclick="toggleNotificationPanel(event)" title="Notifications">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           <span class="notification-badge" id="notifBadge">0</span>
-        </button>
-        <div class="notification-panel" id="notifPanel">
-          <div class="notification-panel-header">
-            <span>Notifications</span>
-            <button onclick="clearAllNotifications()">Clear all</button>
-          </div>
-          <div class="notification-list" id="notifList">
-            <div class="notification-empty">
-              <div class="notification-empty-icon">⏀</div>
-              No notifications
-            </div>
-          </div>
-        </div>
-      </div>
+      </button>
       <div class="new-thread-container">
         <button class="new-thread-btn" onclick="toggleNewThreadDropdown(event)" title="New thread">+</button>
         <div class="new-thread-dropdown" id="newThreadDropdown">
@@ -3700,10 +3688,15 @@ function handleNotifClick(id) {
 function toggleNotificationPanel(e) {
   e.stopPropagation();
   const panel = document.getElementById('notifPanel');
+  const bell = document.getElementById('notifBell');
   panel.classList.toggle('open');
 
-  // Close when clicking outside
+  // Position the panel relative to the bell button
   if (panel.classList.contains('open')) {
+    const rect = bell.getBoundingClientRect();
+    panel.style.top = (rect.bottom + 8) + 'px';
+    panel.style.left = Math.max(8, rect.left - 160 + rect.width / 2) + 'px';
+
     setTimeout(() => {
       document.addEventListener('click', closeNotifPanelOnOutside, { once: true });
     }, 0);
@@ -6478,5 +6471,20 @@ if (window.vektor?.isElectron) {
   document.documentElement.classList.add('electron-app');
 }
 </script>
+
+<!-- Notification panel - mounted at body level to escape all stacking contexts -->
+<div class="notification-panel" id="notifPanel">
+  <div class="notification-panel-header">
+    <span>Notifications</span>
+    <button onclick="clearAllNotifications()">Clear all</button>
+  </div>
+  <div class="notification-list" id="notifList">
+    <div class="notification-empty">
+      <div class="notification-empty-icon">⏀</div>
+      No notifications
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
