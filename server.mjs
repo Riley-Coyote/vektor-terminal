@@ -27,7 +27,7 @@ const CLAWD_DIR = join(HOME, 'clawd');
 const MEMORY_DIR = join(CLAWD_DIR, 'memory');
 const REPOS_DIR = join(HOME, 'Documents/Repositories');
 
-// Skill directories (three sources)
+// Skill directories (three sources) — default for backward compat
 const SKILL_DIRS = [
   { path: join(CLAWDBOT_DIR, 'skills'), source: 'clawdhub' },
   { path: join(CLAWD_DIR, 'skills'), source: 'custom' },
@@ -36,6 +36,36 @@ const SKILL_DIRS = [
 
 // Session directories (per agent)
 const AGENTS_DIR = join(CLAWDBOT_DIR, 'agents');
+
+// ── Per-Agent Configuration ──
+const AGENT_CONFIG = {
+  main: {
+    id: 'main', name: 'VEKTOR',
+    workspace: join(HOME, 'clawd'),
+    memoryFile: join(HOME, 'clawd', 'MEMORY.md'),
+    memoryDir: join(HOME, 'clawd', 'memory'),
+    skillDirs: [
+      { path: join(CLAWDBOT_DIR, 'skills'), source: 'clawdhub' },
+      { path: join(HOME, 'clawd', 'skills'), source: 'custom' },
+      { path: join(HOME, '.nvm/versions/node/v22.19.0/lib/node_modules/clawdbot/skills'), source: 'builtin' },
+    ],
+  },
+  anima: {
+    id: 'anima', name: 'ANIMA',
+    workspace: join(HOME, 'clawd-anima'),
+    memoryFile: join(HOME, 'clawd-anima', 'MEMORY.md'),
+    memoryDir: join(HOME, 'clawd-anima', 'memory'),
+    skillDirs: [
+      { path: join(CLAWDBOT_DIR, 'skills'), source: 'clawdhub' },
+      { path: join(HOME, 'clawd-anima', 'skills'), source: 'custom' },
+      { path: join(HOME, '.nvm/versions/node/v22.19.0/lib/node_modules/clawdbot/skills'), source: 'builtin' },
+    ],
+  },
+};
+
+function getAgentConfig(agentId) {
+  return AGENT_CONFIG[agentId] || AGENT_CONFIG.main;
+}
 
 // Ensure directories exist
 [DATA_DIR, THREADS_DIR, UPLOADS_DIR, PUBLIC_DIR].forEach(dir => {
@@ -399,11 +429,15 @@ app.all('/v1/{*splat}', rateLimit, async (req, res) => {
   // Build upstream headers — pass through relevant headers
   const headers = { 'Content-Type': 'application/json' };
   if (req.headers['authorization']) headers['Authorization'] = req.headers['authorization'];
-  if (req.headers['x-clawdbot-agent-id']) headers['x-clawdbot-agent-id'] = req.headers['x-clawdbot-agent-id'];
+  // Forward agent ID header — support both legacy and current names
+  const agentId = req.headers['x-openclaw-agent-id'] || req.headers['x-clawdbot-agent-id'];
+  if (agentId) headers['x-openclaw-agent-id'] = agentId;
 
   // Session key: prefer explicit header, then try to extract from body for thread mapping
-  if (req.headers['x-clawdbot-session-key']) {
-    headers['x-clawdbot-session-key'] = req.headers['x-clawdbot-session-key'];
+  // Forward session key header — support both names
+  const sessionKeyHeader = req.headers['x-openclaw-session-key'] || req.headers['x-clawdbot-session-key'];
+  if (sessionKeyHeader) {
+    headers['x-openclaw-session-key'] = sessionKeyHeader;
   } else {
     // Try to extract thread context from request body to map to session
     try {
@@ -415,7 +449,7 @@ app.all('/v1/{*splat}', rateLimit, async (req, res) => {
           const threadId = user.replace('vektor-terminal-', '');
           const thread = readThread(threadId);
           if (thread?.sessionKey) {
-            headers['x-clawdbot-session-key'] = thread.sessionKey;
+            headers['x-openclaw-session-key'] = thread.sessionKey;
           }
         }
       }
@@ -633,8 +667,9 @@ function parseSkillMeta(skillDir) {
 
 app.get('/api/skills', (req, res) => {
   try {
+    const agentConfig = getAgentConfig(req.query.agent);
     const skills = [];
-    for (const { path: dir, source } of SKILL_DIRS) {
+    for (const { path: dir, source } of agentConfig.skillDirs) {
       if (!existsSync(dir)) continue;
       const entries = readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
@@ -670,7 +705,8 @@ app.get('/api/skills', (req, res) => {
 
 app.get('/api/skills/:id', (req, res) => {
   try {
-    for (const { path: dir, source } of SKILL_DIRS) {
+    const agentConfig = getAgentConfig(req.query.agent);
+    for (const { path: dir, source } of agentConfig.skillDirs) {
       const skillDir = join(dir, req.params.id);
       if (existsSync(skillDir)) {
         const meta = parseSkillMeta(skillDir);
@@ -955,17 +991,18 @@ app.get('/api/cron/:id/runs', (req, res) => {
 
 // ── 4d. PROJECTS ──
 
-function discoverProjects() {
+function discoverProjects(agentId) {
+  const agentConfig = getAgentConfig(agentId);
   const projects = [];
 
-  // Scan ~/clawd for project dirs (has package.json, pyproject.toml, Cargo.toml, or .git)
+  // Scan agent workspace for project dirs (has package.json, pyproject.toml, Cargo.toml, or .git)
   const projectMarkers = ['package.json', 'pyproject.toml', 'Cargo.toml', 'setup.py'];
   const skipDirs = new Set(['node_modules', '.git', 'dist', 'build', 'memory', 'memories', 'skills', 'design-refs', 'design-agents', 'research', 'ops', 'canvas', 'chatgpt-v2-designs', 'polyphonic-ref', 'x-drafts']);
 
-  if (existsSync(CLAWD_DIR)) {
-    for (const entry of readdirSync(CLAWD_DIR, { withFileTypes: true })) {
+  if (existsSync(agentConfig.workspace)) {
+    for (const entry of readdirSync(agentConfig.workspace, { withFileTypes: true })) {
       if (!entry.isDirectory() || skipDirs.has(entry.name) || entry.name.startsWith('.')) continue;
-      const dir = join(CLAWD_DIR, entry.name);
+      const dir = join(agentConfig.workspace, entry.name);
       const hasMarker = projectMarkers.some(m => existsSync(join(dir, m)));
       const hasGit = existsSync(join(dir, '.git'));
 
@@ -974,7 +1011,7 @@ function discoverProjects() {
           id: entry.name,
           name: entry.name,
           path: dir,
-          workspace: 'clawd',
+          workspace: basename(agentConfig.workspace),
           markers: [],
         };
 
@@ -1103,7 +1140,7 @@ function discoverProjects() {
 
 app.get('/api/projects', (req, res) => {
   try {
-    const projects = discoverProjects();
+    const projects = discoverProjects(req.query.agent);
     res.json({ projects, total: projects.length });
   } catch (err) {
     errorResponse(res, 500, 'internal_error', err.message);
@@ -1140,16 +1177,16 @@ app.get('/api/projects/:id', (req, res) => {
 
 app.get('/api/memory', (req, res) => {
   try {
+    const agentConfig = getAgentConfig(req.query.agent);
     const files = [];
 
     // Main MEMORY.md
-    const mainMemory = join(CLAWD_DIR, 'MEMORY.md');
-    if (existsSync(mainMemory)) {
-      const stat = statSync(mainMemory);
+    if (existsSync(agentConfig.memoryFile)) {
+      const stat = statSync(agentConfig.memoryFile);
       files.push({
         id: 'MEMORY.md',
         name: 'MEMORY.md',
-        path: mainMemory,
+        path: agentConfig.memoryFile,
         type: 'core',
         size: stat.size,
         modifiedAt: stat.mtime.toISOString(),
@@ -1157,11 +1194,11 @@ app.get('/api/memory', (req, res) => {
     }
 
     // Memory directory files
-    if (existsSync(MEMORY_DIR)) {
-      for (const entry of readdirSync(MEMORY_DIR, { withFileTypes: true })) {
+    if (existsSync(agentConfig.memoryDir)) {
+      for (const entry of readdirSync(agentConfig.memoryDir, { withFileTypes: true })) {
         if (entry.isDirectory()) {
           // Scan subdirectories like reflections/
-          const subDir = join(MEMORY_DIR, entry.name);
+          const subDir = join(agentConfig.memoryDir, entry.name);
           for (const sub of readdirSync(subDir)) {
             const fp = join(subDir, sub);
             try {
@@ -1177,7 +1214,7 @@ app.get('/api/memory', (req, res) => {
             } catch {}
           }
         } else {
-          const fp = join(MEMORY_DIR, entry.name);
+          const fp = join(agentConfig.memoryDir, entry.name);
           try {
             const stat = statSync(fp);
             // Categorize by filename pattern
@@ -1217,14 +1254,15 @@ app.get('/api/memory', (req, res) => {
 
 app.get('/api/memory/:id', (req, res) => {
   try {
+    const agentConfig = getAgentConfig(req.query.agent);
     // Handle nested paths like reflections/file.md
     const id = req.params.id;
     let filePath;
 
     if (id === 'MEMORY.md') {
-      filePath = join(CLAWD_DIR, 'MEMORY.md');
+      filePath = agentConfig.memoryFile;
     } else {
-      filePath = join(MEMORY_DIR, id);
+      filePath = join(agentConfig.memoryDir, id);
     }
 
     if (!existsSync(filePath)) return errorResponse(res, 404, 'not_found', 'Memory file not found');
@@ -1246,7 +1284,8 @@ app.get('/api/memory/:id', (req, res) => {
 // Handle nested memory paths (e.g., reflections/file.md)
 app.get('/api/memory/:dir/:file', (req, res) => {
   try {
-    const filePath = join(MEMORY_DIR, req.params.dir, req.params.file);
+    const agentConfig = getAgentConfig(req.query.agent);
+    const filePath = join(agentConfig.memoryDir, req.params.dir, req.params.file);
     if (!existsSync(filePath)) return errorResponse(res, 404, 'not_found', 'Memory file not found');
 
     const content = readFileSync(filePath, 'utf-8');

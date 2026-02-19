@@ -23,6 +23,7 @@
   .electron-app .sidebar-header button,
   .electron-app .sidebar-header .new-thread-btn,
   .electron-app .sidebar-header .sidebar-collapse-btn,
+  .electron-app .sidebar-header .sidebar-title,
   .electron-app .collapsed-new-thread-btn {
     -webkit-app-region: no-drag;
   }
@@ -128,6 +129,98 @@
 
   .sidebar.collapsed .sidebar-title .title-text {
     display: none;
+  }
+
+  .sidebar.collapsed .agent-selector-chevron {
+    display: none;
+  }
+
+  /* Agent selector dropdown */
+  .sidebar-title {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+  }
+
+  .agent-selector-chevron {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    transition: transform 0.15s;
+    margin-left: -4px;
+  }
+
+  .sidebar-title.open .agent-selector-chevron {
+    transform: rotate(180deg);
+  }
+
+  .agent-selector-glyph {
+    font-size: 14px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .agent-selector-dropdown {
+    display: none;
+    position: fixed;
+    background: rgba(30, 34, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    min-width: 170px;
+    z-index: 9999;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    animation: dropdownIn 0.12s ease-out;
+  }
+
+  .agent-selector-dropdown.open {
+    display: block;
+  }
+
+  .agent-selector-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    transition: all 0.12s;
+  }
+
+  .agent-selector-option:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .agent-selector-option.active {
+    color: var(--text-primary);
+  }
+
+  .agent-selector-option .as-glyph {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .agent-selector-option .as-check {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--accent);
+    opacity: 0;
+  }
+
+  .agent-selector-option.active .as-check {
+    opacity: 1;
   }
 
   /* (glyph moved to main header right side) */
@@ -2903,8 +2996,22 @@
       <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <div class="sidebar-title">
-        <span class="title-text">VEKTOR</span>
+      <div class="sidebar-title" id="agentSelector" onclick="toggleAgentSelector(event)">
+        <span class="agent-selector-glyph" id="agentSelectorGlyph">⏀</span>
+        <span class="title-text" id="agentSelectorName">VEKTOR</span>
+        <span class="agent-selector-chevron title-text">▾</span>
+        <div class="agent-selector-dropdown" id="agentSelectorDropdown">
+          <button class="agent-selector-option active" data-agent="main" onclick="switchAgent('main', event)">
+            <span class="as-glyph" style="color:#8EC3E3">⏀</span>
+            <span>VEKTOR</span>
+            <span class="as-check">✓</span>
+          </button>
+          <button class="agent-selector-option" data-agent="anima" onclick="switchAgent('anima', event)">
+            <span class="as-glyph" style="color:#7b8fb0">△</span>
+            <span>ANIMA</span>
+            <span class="as-check">✓</span>
+          </button>
+        </div>
       </div>
       <button class="notification-bell" id="notifBell" onclick="toggleNotificationPanel(event)" title="Notifications">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -3187,6 +3294,121 @@ const AGENTS = {
 };
 
 // ══════════════════════════════════════════════
+// ── Global Agent Selection ──
+// ══════════════════════════════════════════════
+let selectedAgentId = localStorage.getItem('vektor-selected-agent') || 'main';
+
+function toggleAgentSelector(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('agentSelectorDropdown');
+  const selector = document.getElementById('agentSelector');
+  const isOpen = dropdown.classList.contains('open');
+  dropdown.classList.toggle('open', !isOpen);
+  selector.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    // Position dropdown below the selector using fixed positioning
+    const rect = selector.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 6) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    // Close on next outside click
+    setTimeout(() => {
+      document.addEventListener('click', closeAgentSelector, { once: true });
+    }, 0);
+  }
+}
+
+function closeAgentSelector() {
+  document.getElementById('agentSelectorDropdown').classList.remove('open');
+  document.getElementById('agentSelector').classList.remove('open');
+}
+
+function switchAgent(agentId, e) {
+  if (e) e.stopPropagation();
+  if (agentId === selectedAgentId) {
+    closeAgentSelector();
+    return;
+  }
+  selectedAgentId = agentId;
+  localStorage.setItem('vektor-selected-agent', agentId);
+  applyAgentTheme(agentId);
+
+  // Invalidate agent-specific caches
+  ccCache.skills = null;
+  ccCache.memory = null;
+  ccCache.projects = null;
+  ccCache.history = null;
+
+  // Reload current panel if it's agent-specific
+  if (['skills', 'memory', 'projects', 'history'].includes(currentPanel)) {
+    loadPanelData(currentPanel);
+  }
+
+  // Re-render thread list (filtered)
+  renderThreadList();
+
+  // If active thread doesn't belong to this agent (and isn't group), switch to first matching
+  const activeThread = threads.find(t => t.id === activeThreadId);
+  if (!activeThread || (activeThread.mode !== 'group' && activeThread.agentId !== agentId)) {
+    const firstMatch = threads.find(t => t.agentId === agentId || t.mode === 'group');
+    if (firstMatch) {
+      switchThread(firstMatch.id);
+    } else {
+      // No threads for this agent — show empty state
+      activeThreadId = null;
+      const agent = AGENTS[agentId] || AGENTS.main;
+      document.getElementById('mainTitle').innerHTML = `<span style="color:${agent.accentDim}">${agent.name}</span>`;
+      document.getElementById('inputBox').placeholder = `Message ${agent.name.charAt(0) + agent.name.slice(1).toLowerCase()}...`;
+      document.getElementById('messages').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-glyph" style="color:${agent.accent}">${agent.glyph}</div>
+          <div class="empty-text">START A CONVERSATION WITH ${agent.name}</div>
+        </div>`;
+    }
+  }
+
+  closeAgentSelector();
+}
+
+function applyAgentTheme(agentId) {
+  const agent = AGENTS[agentId] || AGENTS.main;
+  const root = document.documentElement;
+
+  // Update CSS variables
+  root.style.setProperty('--accent', agent.accent);
+  root.style.setProperty('--accent-dim', agent.accentDim);
+  root.style.setProperty('--accent-glow', agent.accentGlow);
+
+  // Update sidebar selector UI
+  document.getElementById('agentSelectorGlyph').textContent = agent.glyph;
+  document.getElementById('agentSelectorName').textContent = agent.name;
+
+  // Update dropdown active states
+  document.querySelectorAll('.agent-selector-option').forEach(opt => {
+    opt.classList.toggle('active', opt.dataset.agent === agentId);
+  });
+
+  // Update main header glyph
+  const mainGlyph = document.querySelector('.main-header-glyph');
+  if (mainGlyph) mainGlyph.textContent = agent.glyph;
+
+  // Update empty state glyph and text
+  const emptyGlyph = document.querySelector('.empty-glyph');
+  if (emptyGlyph) {
+    emptyGlyph.textContent = agent.glyph;
+    emptyGlyph.style.color = agent.accent;
+  }
+  const emptyText = document.querySelector('.empty-text');
+  if (emptyText) emptyText.textContent = `START A CONVERSATION WITH ${agent.name}`;
+
+  // Update document title
+  document.title = `⏀ ${agent.name}`;
+
+  // Update drop overlay glyph
+  const dropGlyph = document.querySelector('.drop-overlay-icon');
+  if (dropGlyph) dropGlyph.textContent = agent.glyph;
+}
+
+// ══════════════════════════════════════════════
 // ── State ──
 // ══════════════════════════════════════════════
 let threads = [];
@@ -3212,6 +3434,7 @@ function showToast(message) {
 // ── Init ──
 // ══════════════════════════════════════════════
 async function init() {
+  applyAgentTheme(selectedAgentId);
   loadThreads();
   // Migrate legacy threads that lack mode/participants/agentId
   threads.forEach(t => {
@@ -3734,7 +3957,7 @@ loadNotifications();
 // ── Threads ──
 // ══════════════════════════════════════════════
 function createThread(name, agentId) {
-  agentId = agentId || 'main';
+  agentId = agentId || selectedAgentId;
   const agent = AGENTS[agentId] || AGENTS.main;
   const id = 'thread_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
   const thread = {
@@ -3884,16 +4107,20 @@ function formatTimestamp(ts) {
 // ══════════════════════════════════════════════
 function renderThreadList() {
   const list = document.getElementById('threadList');
-  list.innerHTML = threads.map(t => {
+  // Filter threads by selected agent (group threads always visible)
+  const visibleThreads = threads.filter(t =>
+    t.mode === 'group' || t.agentId === selectedAgentId
+  );
+  list.innerHTML = visibleThreads.map(t => {
     const isGroup = t.mode === 'group';
     const directAgent = !isGroup ? (AGENTS[t.agentId || 'main'] || AGENTS.main) : null;
     const badge = isGroup
       ? `<span class="thread-mode-badge">${t.participants.map(p => AGENTS[p]?.glyph || '?').join('')}</span>`
       : `<span class="thread-mode-badge" style="color:${directAgent.accentDim}">${directAgent.glyph}</span>`;
-    
+
     // Generate initials for collapsed icon
     const iconGlyph = isGroup ? '⏀△' : (directAgent ? directAgent.glyph : getThreadInitials(t));
-    
+
     return `
     <div class="thread-item ${t.id === activeThreadId ? 'active' : ''}"
          data-thread-id="${t.id}"
@@ -4941,7 +5168,7 @@ async function sendDirectMessage(thread, text, attachments) {
         headers: {
           'Authorization': `Bearer ${GATEWAY_TOKEN}`,
           'Content-Type': 'application/json',
-          'x-clawdbot-agent-id': directAgentId
+          'x-openclaw-agent-id': directAgentId
         },
         body: JSON.stringify({
           model: `clawdbot:${directAgentId}`,
@@ -4962,7 +5189,7 @@ async function sendDirectMessage(thread, text, attachments) {
         headers: {
           'Authorization': `Bearer ${GATEWAY_TOKEN}`,
           'Content-Type': 'application/json',
-          'x-clawdbot-agent-id': directAgentId
+          'x-openclaw-agent-id': directAgentId
         },
         body: JSON.stringify({
           model: `clawdbot:${directAgentId}`,
@@ -5120,7 +5347,7 @@ async function streamAgentResponse(thread, agentId, msgIdx, messageContent, bina
         headers: {
           'Authorization': `Bearer ${GATEWAY_TOKEN}`,
           'Content-Type': 'application/json',
-          'x-clawdbot-agent-id': agentId
+          'x-openclaw-agent-id': agentId
         },
         body: JSON.stringify({
           model: `clawdbot:${agentId}`,
@@ -5138,7 +5365,7 @@ async function streamAgentResponse(thread, agentId, msgIdx, messageContent, bina
         headers: {
           'Authorization': `Bearer ${GATEWAY_TOKEN}`,
           'Content-Type': 'application/json',
-          'x-clawdbot-agent-id': agentId
+          'x-openclaw-agent-id': agentId
         },
         body: JSON.stringify({
           model: `clawdbot:${agentId}`,
@@ -5965,7 +6192,7 @@ async function loadPanelData(panel) {
 async function loadSkills() {
   if (ccCache.skills) return renderSkills(ccCache.skills);
   try {
-    const res = await fetch('/api/skills');
+    const res = await fetch(`/api/skills?agent=${selectedAgentId}`);
     const data = await res.json();
     ccCache.skills = data.skills;
     renderSkills(data.skills);
@@ -6000,7 +6227,7 @@ function filterSkills() {
 
 async function openSkillDetail(id) {
   try {
-    const res = await fetch(`/api/skills/${id}`);
+    const res = await fetch(`/api/skills/${id}?agent=${selectedAgentId}`);
     const skill = await res.json();
     showDetailView(skill.name, `${skill.source} skill · ${(skill.files || []).length} files`, renderMarkdownBasic(skill.content || 'No content'));
   } catch {
@@ -6024,10 +6251,12 @@ async function loadHistory() {
 }
 
 function renderHistoryAgentFilter(agents) {
+  // Pre-select the filter tab matching the selected agent
+  ccFilters.historyAgent = selectedAgentId;
   const container = document.getElementById('historyAgentFilter');
   container.innerHTML = `
-    <button class="filter-tab active" onclick="setHistoryAgent(null, this)">All</button>
-    ${agents.map(a => `<button class="filter-tab" onclick="setHistoryAgent('${a}', this)">${a}</button>`).join('')}
+    <button class="filter-tab" onclick="setHistoryAgent(null, this)">All</button>
+    ${agents.map(a => `<button class="filter-tab ${a === selectedAgentId ? 'active' : ''}" onclick="setHistoryAgent('${a}', this)">${a}</button>`).join('')}
   `;
 }
 
@@ -6196,7 +6425,7 @@ function renderCron(jobs) {
 async function loadProjects() {
   if (ccCache.projects) return renderProjects(ccCache.projects);
   try {
-    const res = await fetch('/api/projects');
+    const res = await fetch(`/api/projects?agent=${selectedAgentId}`);
     const data = await res.json();
     ccCache.projects = data.projects;
     renderProjects(data.projects);
@@ -6274,7 +6503,7 @@ async function openProjectDetail(id) {
 async function loadMemory() {
   if (ccCache.memory) return renderMemory(ccCache.memory);
   try {
-    const res = await fetch('/api/memory');
+    const res = await fetch(`/api/memory?agent=${selectedAgentId}`);
     const data = await res.json();
     ccCache.memory = data.files;
     renderMemory(data.files);
@@ -6325,7 +6554,7 @@ function renderMemory(files) {
 async function openMemoryDetail(encodedId) {
   const id = decodeURIComponent(encodedId);
   try {
-    const res = await fetch(`/api/memory/${id}`);
+    const res = await fetch(`/api/memory/${id}?agent=${selectedAgentId}`);
     const data = await res.json();
     const modified = data.modifiedAt ? new Date(data.modifiedAt).toLocaleString() : '';
     const size = data.size > 1024 ? `${(data.size / 1024).toFixed(1)}KB` : `${data.size}B`;
