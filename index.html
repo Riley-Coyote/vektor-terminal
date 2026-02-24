@@ -79,10 +79,323 @@
     height: 100vh;
   }
 
+  /* ═══════════════════════════════
+     NAV RAIL (48px vertical icon bar)
+     ═══════════════════════════════ */
+
+  .nav-rail {
+    width: 48px;
+    min-width: 48px;
+    background: rgba(26, 30, 38, 0.65);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 0;
+    z-index: 20;
+  }
+
+  .nav-rail-top,
+  .nav-rail-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .nav-rail-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .nav-rail-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+  }
+
+  .nav-rail-btn.active {
+    background: var(--accent-glow);
+    color: var(--accent);
+  }
+
+  .nav-rail-btn.active::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-rail-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nav-rail-divider {
+    width: 24px;
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+
+  .nav-rail-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+  }
+
+  .nav-rail-logo:hover {
+    background: var(--accent-glow);
+  }
+
+  .nav-rail-notification-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    background: #DC3545;
+    border-radius: 50%;
+    border: 1.5px solid var(--bg-primary);
+  }
+
+  .nav-rail-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent-dim);
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-rail-avatar:hover {
+    border-color: var(--accent);
+    background: rgba(142, 195, 227, 0.15);
+  }
+
+  .nav-rail-btn[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(30, 34, 42, 0.95);
+    color: var(--text-primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  /* ─── Breadcrumb ─── */
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .breadcrumb-segment {
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color 0.12s;
+  }
+
+  .breadcrumb-segment:hover {
+    color: var(--text-primary);
+  }
+
+  .breadcrumb-separator {
+    color: var(--text-tertiary);
+    opacity: 0.4;
+    font-size: 10px;
+  }
+
+  .breadcrumb-current {
+    color: var(--text-secondary);
+    cursor: default;
+  }
+
+  /* ─── Dashboard / Home view ─── */
+
+  .dashboard-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 48px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dashboard-inner {
+    max-width: 680px;
+    width: 100%;
+  }
+
+  .dashboard-welcome {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .dashboard-glyph {
+    font-size: 42px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .dashboard-title {
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .dashboard-subtitle {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .stat-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-dim);
+  }
+
+  .stat-number {
+    font-family: 'Geist Mono', monospace;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dashboard-section-title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    margin-bottom: 12px;
+  }
+
+  .dashboard-recent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .recent-item:hover {
+    background: var(--bg-hover);
+  }
+
+  .recent-icon {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  .recent-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .recent-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .recent-time {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  /* ─── Fade animation for view transitions ─── */
+
+  .fade-in {
+    animation: fadeIn 0.15s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   /* Sidebar */
   .sidebar {
-    width: 260px;
-    min-width: 260px;
+    width: 240px;
+    min-width: 240px;
     background: var(--bg-secondary);
     backdrop-filter: blur(24px) saturate(1.4);
     -webkit-backdrop-filter: blur(24px) saturate(1.4);
@@ -90,12 +403,15 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
   }
 
   .sidebar.collapsed {
-    width: 52px;
-    min-width: 52px;
+    width: 0;
+    min-width: 0;
+    border-right: none;
+    opacity: 0;
+    pointer-events: none;
   }
 
   .sidebar-header {
@@ -105,13 +421,7 @@
     justify-content: space-between;
   }
 
-  .sidebar.collapsed .sidebar-header {
-    padding: 16px 8px 12px;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
+  /* (old collapsed sidebar-header styles removed - sidebar now collapses to 0) */
 
   .sidebar-title {
     font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -127,13 +437,7 @@
     overflow: hidden;
   }
 
-  .sidebar.collapsed .sidebar-title .title-text {
-    display: none;
-  }
-
-  .sidebar.collapsed .agent-selector-chevron {
-    display: none;
-  }
+  /* (old collapsed title/chevron hide rules removed) */
 
   /* Agent selector dropdown */
   .sidebar-title {
@@ -248,13 +552,7 @@
     background: var(--bg-hover);
   }
 
-  .sidebar.collapsed .sidebar-collapse-btn {
-    transform: rotate(180deg);
-  }
-
-  .sidebar.collapsed .new-thread-container {
-    display: none;
-  }
+  /* (old collapsed btn/thread rules removed) */
 
   /* Collapsed new thread button at bottom of thread list */
   .collapsed-new-thread-btn {
@@ -519,6 +817,10 @@
 
   .thread-action-btn.delete:hover {
     color: #c44;
+  }
+
+  .thread-action-btn.resume:hover {
+    color: var(--accent);
   }
 
   .thread-meta {
@@ -1257,6 +1559,35 @@
   }
 
   /* ═══════════════════════════════════════════ */
+  /* Context Health Indicator                    */
+  /* ═══════════════════════════════════════════ */
+  .context-health-bar {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .context-health-dot {
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  .context-health-dot.green { color: #4a7; }
+  .context-health-dot.yellow { color: #da6; }
+  .context-health-dot.orange { color: #e95; }
+  .context-health-dot.red { color: #c44; }
+
+  .context-health-text {
+    color: var(--text-tertiary);
+  }
+
+  /* ═══════════════════════════════════════════ */
   /* Toast Notification                          */
   /* ═══════════════════════════════════════════ */
   /* ═══════════════════════════════════════════ */
@@ -1309,7 +1640,7 @@
   .notification-panel {
     position: fixed;
     width: 320px;
-    max-height: 420px;
+    max-height: min(420px, calc(100vh - 24px));
     background: #111318;
     border: 1px solid #2a2a2a;
     border-radius: 8px;
@@ -1320,8 +1651,15 @@
     overflow: hidden;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
   }
-  .notification-panel.open { display: flex; }
+  .notification-panel.visible { display: flex; }
+  .notification-panel.open {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
   .notification-panel-header {
     display: flex;
@@ -2513,14 +2851,9 @@
      COMMAND CENTER — Browse panels
      ══════════════════════════════════════════════ */
 
-  /* Sidebar navigation tabs */
+  /* Sidebar navigation tabs (hidden - replaced by nav-rail) */
   .sidebar-nav {
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    padding: 0 2px;
-    gap: 0;
-    flex-shrink: 0;
-    overflow: visible;
+    display: none !important;
   }
   .sidebar-nav-btn {
     flex: 1 1 0;
@@ -2568,21 +2901,7 @@
     text-overflow: ellipsis;
     max-width: 100%;
   }
-  .sidebar.collapsed .sidebar-nav {
-    flex-direction: column;
-    padding: 4px;
-    gap: 0;
-  }
-  .sidebar.collapsed .sidebar-nav-btn {
-    padding: 8px 4px;
-  }
-  .sidebar.collapsed .nav-label {
-    display: none;
-  }
-  .sidebar.collapsed .sidebar-nav-btn svg {
-    width: 16px;
-    height: 16px;
-  }
+  /* (old collapsed sidebar-nav styles removed - nav-rail replaces them) */
 
   /* Browse panel (replaces thread-list when on non-chat tab) */
   .browse-panel {
@@ -2708,6 +3027,203 @@
   .browse-tag.enabled { background: rgba(100, 200, 100, 0.12); color: #6c6; }
   .browse-tag.disabled { background: rgba(200, 100, 100, 0.12); color: #c66; }
 
+  /* ── Journal ── */
+  .journal-filters {
+    display: flex;
+    gap: 4px;
+    padding: 6px 12px;
+    flex-wrap: wrap;
+  }
+  .journal-filter-pill {
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .journal-filter-pill:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+  }
+  .journal-filter-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a0a0a;
+  }
+  .journal-sort {
+    display: flex;
+    gap: 4px;
+    padding: 2px 12px 6px;
+  }
+  .journal-sort-btn {
+    padding: 2px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 10px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .journal-sort-btn.active {
+    color: var(--accent);
+  }
+  .journal-sort-btn:hover {
+    color: var(--text-primary);
+  }
+  .journal-load-more {
+    padding: 10px 16px;
+    text-align: center;
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    border-top: 1px solid var(--border);
+  }
+  .journal-load-more:hover {
+    background: rgba(142, 195, 227, 0.05);
+  }
+  .journal-stats {
+    display: flex;
+    gap: 12px;
+    padding: 4px 16px 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .journal-stat {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+  .journal-stat strong {
+    color: #7b8fb0;
+    font-weight: 600;
+  }
+  .journal-updated {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    padding: 0 16px 6px;
+    opacity: 0.7;
+  }
+  .journal-section-header {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    padding: 14px 12px 6px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  /* Journal sidebar list items (compact, like thread-item) */
+  .journal-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .journal-item:hover {
+    background: var(--bg-hover);
+  }
+  .journal-item.active {
+    background: rgba(142, 195, 227, 0.08);
+  }
+  .journal-item-preview {
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .journal-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .journal-item-time {
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+  /* Detail view journal entry styling */
+  .journal-detail-content {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    padding: 4px 0;
+  }
+  .journal-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .journal-detail-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .journal-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+  .journal-badge.background { background: rgba(123, 143, 176, 0.12); color: #7b8fb0; }
+  .journal-badge.reflection { background: rgba(142, 195, 227, 0.12); color: var(--accent); }
+  .journal-badge.question { background: rgba(200, 170, 100, 0.12); color: #c8a864; }
+  .journal-badge.dream { background: rgba(160, 130, 200, 0.12); color: #a082c8; }
+  .journal-badge.published { background: rgba(100, 200, 140, 0.12); color: #64c88c; }
+  .journal-badge.soften { background: rgba(200, 170, 100, 0.1); color: #b09860; }
+  .journal-badge.deep_soften { background: rgba(200, 130, 80, 0.1); color: #c08050; }
+  .journal-badge.archive { background: rgba(200, 100, 100, 0.1); color: #c06060; }
+  .journal-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(123, 143, 176, 0.08);
+    color: #556b8a;
+  }
+  /* Journal detail - dream styling */
+  .journal-detail-dream {
+    background: linear-gradient(135deg, rgba(160, 130, 200, 0.06), rgba(100, 130, 200, 0.04));
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 3px solid rgba(160, 130, 200, 0.4);
+  }
+  .journal-detail-dream .journal-detail-content {
+    font-style: italic;
+    color: rgba(200, 185, 230, 0.9);
+  }
+  /* Published link in detail */
+  .journal-detail-tweet-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .journal-detail-tweet-link:hover {
+    text-decoration: underline;
+  }
+  /* Decay detail */
+  .journal-sharpness {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  .journal-sharpness .arrow {
+    color: #c06060;
+    margin: 0 4px;
+  }
+
   /* History items */
   .history-date-header {
     font-size: 10px;
@@ -2759,54 +3275,15 @@
     white-space: nowrap;
   }
 
-  /* Detail view in main area */
+  /* Detail view (inside main area, replaces messages when active) */
   .detail-view {
     display: none;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
+    flex: 1;
+    overflow-y: auto;
   }
   .detail-view.active {
     display: flex;
-  }
-  .detail-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .detail-header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .detail-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
-  }
-  .detail-subtitle {
-    font-size: 12px;
-    color: var(--text-tertiary);
-  }
-  .detail-back {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .detail-back:hover {
-    background: var(--bg-hover);
-    border-color: var(--accent-dim);
-    color: var(--text-primary);
   }
   .detail-content {
     flex: 1;
@@ -2990,12 +3467,53 @@
 <body>
 
 <div class="app" id="app">
-  <!-- Sidebar -->
+
+  <!-- ═══ NAV RAIL ═══ -->
+  <div class="nav-rail">
+    <div class="nav-rail-top">
+      <button class="nav-rail-logo" onclick="switchSection('home')" title="Home">⏀</button>
+
+      <button class="nav-rail-btn active" data-section="chat" data-tooltip="Chat" onclick="switchSection('chat')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </button>
+
+      <div class="nav-rail-divider"></div>
+
+      <button class="nav-rail-btn" data-section="skills" data-tooltip="Skills" onclick="switchSection('skills')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      </button>
+      <button class="nav-rail-btn" data-section="history" data-tooltip="Session Log" onclick="switchSection('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </button>
+      <button class="nav-rail-btn" data-section="cron" data-tooltip="Tasks" onclick="switchSection('cron')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </button>
+      <button class="nav-rail-btn" data-section="projects" data-tooltip="Files" onclick="switchSection('projects')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      </button>
+      <button class="nav-rail-btn" data-section="memory" data-tooltip="Memory" onclick="switchSection('memory')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4c0 1.95-1.4 3.58-3.25 3.93L12 22l-.75-12.07A4.001 4.001 0 0112 2z"/><circle cx="12" cy="6" r="1"/></svg>
+      </button>
+      <button class="nav-rail-btn" data-section="journal" data-tooltip="Journal" onclick="switchSection('journal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="13" y2="11"/></svg>
+      </button>
+    </div>
+
+    <div class="nav-rail-bottom">
+      <button class="nav-rail-btn" data-tooltip="Notifications" onclick="toggleNotificationPanel(event)" style="position:relative" id="notifBell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="nav-rail-notification-dot" id="navRailNotifDot" style="display:none;"></span>
+      </button>
+      <div class="nav-rail-avatar" id="navRailAvatar" onclick="toggleAgentSelector(event)" title="Switch Agent">⏀</div>
+      <button class="nav-rail-btn" data-tooltip="Toggle Sidebar" onclick="toggleSidebarCollapse()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ SIDEBAR ═══ -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
       <div class="sidebar-title" id="agentSelector" onclick="toggleAgentSelector(event)">
         <span class="agent-selector-glyph" id="agentSelectorGlyph">⏀</span>
         <span class="title-text" id="agentSelectorName">VEKTOR</span>
@@ -3013,10 +3531,6 @@
           </button>
         </div>
       </div>
-      <button class="notification-bell" id="notifBell" onclick="toggleNotificationPanel(event)" title="Notifications">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-          <span class="notification-badge" id="notifBadge">0</span>
-      </button>
       <div class="new-thread-container">
         <button class="new-thread-btn" onclick="toggleNewThreadDropdown(event)" title="New thread">+</button>
         <div class="new-thread-dropdown" id="newThreadDropdown">
@@ -3069,6 +3583,10 @@
       <button class="sidebar-nav-btn" data-panel="memory" onclick="switchPanel('memory')" title="Memory">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4c0 1.95-1.4 3.58-3.25 3.93L12 22l-.75-12.07A4.001 4.001 0 0112 2z"/><circle cx="12" cy="6" r="1"/></svg>
         <span class="nav-label">Mem</span>
+      </button>
+      <button class="sidebar-nav-btn" data-panel="journal" onclick="switchPanel('journal')" title="Anima's Journal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="13" y2="11"/></svg>
+        <span class="nav-label">Journal</span>
       </button>
     </div>
 
@@ -3124,7 +3642,28 @@
       <div class="browse-list" id="memoryList"></div>
     </div>
 
-    <button class="collapsed-new-thread-btn" onclick="createThread()" title="New chat">+</button>
+    <!-- Journal browse panel -->
+    <div class="browse-panel" id="panelJournal">
+      <div class="browse-panel-header">
+        <span class="browse-panel-title">Anima's Journal</span>
+        <span class="browse-panel-count" id="journalCount">—</span>
+      </div>
+      <div class="journal-stats" id="journalStats"></div>
+      <div class="journal-filters" id="journalFilters">
+        <button class="journal-filter-pill active" data-filter="all" onclick="filterJournal('all')">All</button>
+        <button class="journal-filter-pill" data-filter="thought" onclick="filterJournal('thought')">Thoughts</button>
+        <button class="journal-filter-pill" data-filter="dream" onclick="filterJournal('dream')">Dreams</button>
+        <button class="journal-filter-pill" data-filter="published" onclick="filterJournal('published')">Published</button>
+        <button class="journal-filter-pill" data-filter="decay" onclick="filterJournal('decay')">Decay</button>
+      </div>
+      <div class="journal-sort" id="journalSort">
+        <button class="journal-sort-btn active" data-sort="recent" onclick="sortJournal('recent')">Recent</button>
+        <button class="journal-sort-btn" data-sort="salience" onclick="sortJournal('salience')">Salience</button>
+      </div>
+      <div class="browse-list" id="journalList"></div>
+      <div class="journal-load-more" id="journalLoadMore" style="display:none" onclick="loadMoreJournal()">Load more…</div>
+    </div>
+
     <div class="sidebar-footer">
       <span class="status-dot"></span>
       <span class="footer-text">OPUS 4.6 · GATEWAY</span>
@@ -3134,9 +3673,52 @@
   <!-- Main -->
   <div class="main">
     <div class="main-header">
-      <span class="main-header-title" id="mainTitle">Select a thread</span>
-      <span class="main-header-glyph">⏀</span>
+      <div class="breadcrumb" id="breadcrumb">
+        <span class="breadcrumb-current">Chat</span>
+      </div>
+      <span class="main-header-glyph" id="mainHeaderGlyph">⏀</span>
     </div>
+
+    <!-- Dashboard / Home view -->
+    <div class="dashboard-view" id="dashboardView" style="display:none;">
+      <div class="dashboard-inner fade-in">
+        <div class="dashboard-welcome">
+          <div class="dashboard-glyph">⏀</div>
+          <div class="dashboard-title">Welcome back</div>
+          <div class="dashboard-subtitle">What would you like to work on?</div>
+        </div>
+        <div class="dashboard-stats" id="dashboardStats">
+          <div class="stat-card" onclick="switchSection('chat')">
+            <div class="stat-number" id="statThreads">—</div>
+            <div class="stat-label">Threads</div>
+          </div>
+          <div class="stat-card" onclick="switchSection('skills')">
+            <div class="stat-number" id="statSkills">—</div>
+            <div class="stat-label">Skills</div>
+          </div>
+          <div class="stat-card" onclick="switchSection('memory')">
+            <div class="stat-number" id="statMemory">—</div>
+            <div class="stat-label">Memories</div>
+          </div>
+        </div>
+        <div class="dashboard-section-title">Quick Actions</div>
+        <div class="dashboard-recent">
+          <div class="recent-item" onclick="createThread()">
+            <span class="recent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+            <span class="recent-text">New conversation</span>
+          </div>
+          <div class="recent-item" onclick="switchSection('skills')">
+            <span class="recent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></span>
+            <span class="recent-text">Browse skills</span>
+          </div>
+          <div class="recent-item" onclick="switchSection('journal')">
+            <span class="recent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
+            <span class="recent-text">View journal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="messages" id="messages">
       <div class="empty-state">
         <div class="empty-glyph">⏀</div>
@@ -3148,6 +3730,10 @@
       <div class="typing-indicator" id="typingIndicator">
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span id="typingLabel">thinking...</span>
+      </div>
+      <div class="context-health-bar" id="contextHealthBar" style="display:none;">
+        <span class="context-health-dot" id="contextHealthDot">⬤</span>
+        <span class="context-health-text" id="contextHealthText">0% context</span>
       </div>
       <div class="input-wrapper">
         <button class="upload-btn" onclick="document.getElementById('fileInput').click()" title="Upload file or image">
@@ -3177,18 +3763,11 @@
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
       <img id="lightboxImg" src="" alt="">
     </div>
-  </div>
 
-  <!-- Detail View (for browsing skills/sessions/projects/memory) -->
-  <div class="detail-view" id="detailView">
-    <div class="detail-header">
-      <div class="detail-header-left">
-        <div class="detail-title" id="detailTitle">—</div>
-        <div class="detail-subtitle" id="detailSubtitle">—</div>
-      </div>
-      <button class="detail-back" onclick="closeDetailView()">← Back</button>
+    <!-- Detail View (inside main, replaces messages when active) -->
+    <div class="detail-view" id="detailView">
+      <div class="detail-content" id="detailContent"></div>
     </div>
-    <div class="detail-content" id="detailContent"></div>
   </div>
 
   <!-- Resize Handle -->
@@ -3337,6 +3916,7 @@ function switchAgent(agentId, e) {
   ccCache.memory = null;
   ccCache.projects = null;
   ccCache.history = null;
+  ccCache.journal = null;
 
   // Reload current panel if it's agent-specific
   if (['skills', 'memory', 'projects', 'history'].includes(currentPanel)) {
@@ -3356,7 +3936,7 @@ function switchAgent(agentId, e) {
       // No threads for this agent — show empty state
       activeThreadId = null;
       const agent = AGENTS[agentId] || AGENTS.main;
-      document.getElementById('mainTitle').innerHTML = `<span style="color:${agent.accentDim}">${agent.name}</span>`;
+      updateBreadcrumb([agent.name]);
       document.getElementById('inputBox').placeholder = `Message ${agent.name.charAt(0) + agent.name.slice(1).toLowerCase()}...`;
       document.getElementById('messages').innerHTML = `
         <div class="empty-state">
@@ -3364,6 +3944,15 @@ function switchAgent(agentId, e) {
           <div class="empty-text">START A CONVERSATION WITH ${agent.name}</div>
         </div>`;
     }
+  }
+
+  // Update nav-rail avatar
+  const navAvatar = document.getElementById('navRailAvatar');
+  if (navAvatar) {
+    const agentInfo = AGENTS[agentId] || AGENTS.main;
+    navAvatar.textContent = agentInfo.glyph;
+    navAvatar.style.color = agentInfo.accent;
+    navAvatar.style.borderColor = agentInfo.accentDim;
   }
 
   closeAgentSelector();
@@ -3547,6 +4136,10 @@ window.addEventListener('beforeunload', () => {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(threads)); } catch {}
 });
 
+// Archive debouncing state
+let _archiveTimer = null;
+const ARCHIVE_DEBOUNCE_MS = 30000; // 30 seconds
+
 function saveThreads() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
   if (_syncChannel) {
@@ -3554,6 +4147,31 @@ function saveThreads() {
   }
   // Server thread sync disabled — was causing catastrophic thread duplication
   // syncThreadsToServer();
+  
+  // Debounced archive: trigger background POST to /api/threads/:id/archive
+  if (activeThreadId) {
+    if (_archiveTimer) clearTimeout(_archiveTimer);
+    _archiveTimer = setTimeout(() => {
+      archiveThread(activeThreadId);
+    }, ARCHIVE_DEBOUNCE_MS);
+  }
+}
+
+// Archive thread to server (for episodic memory)
+async function archiveThread(threadId) {
+  const thread = threads.find(t => t.id === threadId);
+  if (!thread || thread.messages.length === 0) return;
+  
+  try {
+    await fetch(`/api/threads/${threadId}/archive`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ thread })
+    });
+    // Silent success — no toast needed for background operation
+  } catch (err) {
+    console.warn('[Archive] Failed to archive thread:', err);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -3627,6 +4245,60 @@ function updateCharCount() {
   el.textContent = len.toLocaleString();
   el.classList.toggle('visible', len > 0);
   el.classList.toggle('warn', len > 10000);
+}
+
+// ═══════════════════════════════════════════
+// Context Health Indicator
+// ═══════════════════════════════════════════
+function updateContextHealth() {
+  const thread = threads.find(t => t.id === activeThreadId);
+  if (!thread || thread.messages.length === 0) {
+    document.getElementById('contextHealthBar').style.display = 'none';
+    return;
+  }
+
+  // Count total characters in all messages
+  let totalChars = 0;
+  for (const msg of thread.messages) {
+    totalChars += (msg.content || '').length;
+  }
+
+  // Estimate tokens (chars / 4) and calculate percentage of 200k context
+  const estimatedTokens = totalChars / 4;
+  const contextLimit = 200000;
+  const percentage = Math.round((estimatedTokens / contextLimit) * 100);
+
+  // Update UI
+  const bar = document.getElementById('contextHealthBar');
+  const dot = document.getElementById('contextHealthDot');
+  const text = document.getElementById('contextHealthText');
+
+  if (percentage < 1) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  bar.style.display = 'flex';
+  text.textContent = `${percentage}% context`;
+
+  // Color code
+  dot.className = 'context-health-dot';
+  if (percentage < 50) {
+    dot.classList.add('green');
+  } else if (percentage < 75) {
+    dot.classList.add('yellow');
+  } else if (percentage < 90) {
+    dot.classList.add('orange');
+  } else {
+    dot.classList.add('red');
+  }
+
+  // Add tooltip if over 80%
+  if (percentage > 80) {
+    text.title = 'Context getting full. Consider resuming this thread.';
+  } else {
+    text.title = '';
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -3851,8 +4523,15 @@ function renderNotifications() {
   const unreadCount = _notifications.filter(n => !n.read).length;
 
   // Badge
-  badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-  bell.classList.toggle('has-unread', unreadCount > 0);
+  if (badge) {
+    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+  }
+  if (bell) {
+    bell.classList.toggle('has-unread', unreadCount > 0);
+  }
+  // Nav rail notification dot
+  const navDot = document.getElementById('navRailNotifDot');
+  if (navDot) navDot.style.display = unreadCount > 0 ? '' : 'none';
 
   if (_notifications.length === 0) {
     list.innerHTML = '<div class="notification-empty"><div class="notification-empty-icon">⏀</div>No notifications</div>';
@@ -3904,32 +4583,47 @@ function handleNotifClick(id) {
     }
   }
 
-  // Close the panel
-  document.getElementById('notifPanel').classList.remove('open');
+  // Close the panel (animated)
+  const _p = document.getElementById('notifPanel');
+  _p.classList.remove('open');
+  _p.addEventListener('transitionend', () => { _p.classList.remove('visible'); }, { once: true });
 }
 
 function toggleNotificationPanel(e) {
   e.stopPropagation();
   const panel = document.getElementById('notifPanel');
   const bell = document.getElementById('notifBell');
-  panel.classList.toggle('open');
 
-  // Position the panel relative to the bell button
-  if (panel.classList.contains('open')) {
+  if (!panel.classList.contains('open')) {
+    // Opening: position, show, then animate
     const rect = bell.getBoundingClientRect();
-    panel.style.top = (rect.bottom + 8) + 'px';
-    panel.style.left = Math.max(8, rect.left - 160 + rect.width / 2) + 'px';
+    panel.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+    panel.style.top = 'auto';
+    panel.style.left = (rect.right + 8) + 'px';
+
+    panel.classList.add('visible');   // display: flex
+    void panel.offsetHeight;          // force reflow
+    panel.classList.add('open');      // triggers transition
 
     setTimeout(() => {
       document.addEventListener('click', closeNotifPanelOnOutside, { once: true });
     }, 0);
+  } else {
+    // Closing (animated)
+    panel.classList.remove('open');
+    panel.addEventListener('transitionend', () => {
+      panel.classList.remove('visible');
+    }, { once: true });
   }
 }
 
 function closeNotifPanelOnOutside(e) {
   const panel = document.getElementById('notifPanel');
-  if (!panel.contains(e.target) && e.target.id !== 'notifBell') {
+  if (!panel.contains(e.target) && e.target.id !== 'notifBell' && !e.target.closest('#notifBell')) {
     panel.classList.remove('open');
+    panel.addEventListener('transitionend', () => {
+      panel.classList.remove('visible');
+    }, { once: true });
   }
 }
 
@@ -4010,6 +4704,71 @@ function deleteThread(id, e) {
   renderThreadList();
 }
 
+async function resumeThread(id, e) {
+  e?.stopPropagation();
+  const originalThread = threads.find(t => t.id === id);
+  if (!originalThread) return;
+  
+  try {
+    // Call resume endpoint
+    const res = await fetch(`/api/threads/${id}/resume`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ thread: originalThread })
+    });
+    
+    if (!res.ok) {
+      showToast('Failed to resume thread');
+      return;
+    }
+    
+    const data = await res.json();
+    
+    // Create new thread
+    const newThreadId = 'thread_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const newThread = {
+      id: newThreadId,
+      name: `[Resumed] ${data.originalThreadName}`,
+      mode: originalThread.mode || 'direct',
+      agentId: originalThread.agentId || 'main',
+      participants: originalThread.participants || ['main'],
+      messages: [],
+      created: Date.now()
+    };
+    
+    // Add context summary as a user message (so the LLM sees it as input context)
+    const summaryMessage = {
+      id: Math.random().toString(36).slice(2),
+      role: 'user',
+      content: `[Context: This thread continues from "${data.originalThreadName}". Summary of earlier discussion:\n${data.summary}\n\nThe following messages are carried over verbatim from the previous thread.]`,
+      timestamp: Date.now()
+    };
+    newThread.messages.push(summaryMessage);
+    
+    // Add recent messages
+    for (const msg of data.recentMessages) {
+      newThread.messages.push({
+        id: Math.random().toString(36).slice(2),
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        agentId: msg.agentId || newThread.agentId
+      });
+    }
+    
+    // Add to threads and switch
+    threads.unshift(newThread);
+    saveThreads();
+    renderThreadList();
+    switchThread(newThreadId);
+    
+    showToast(`Resumed with ${data.carriedOverMessages} recent messages`);
+  } catch (err) {
+    console.error('[Resume] Error:', err);
+    showToast('Failed to resume thread');
+  }
+}
+
 function startRename(id, e) {
   e?.stopPropagation();
   const el = document.querySelector(`[data-thread-id="${id}"] .thread-name`);
@@ -4049,6 +4808,7 @@ function switchThread(id) {
   renderMessages();
   renderThreadList();
   restoreDraft();
+  updateContextHealth();
   document.getElementById('inputBox').focus();
 }
 
@@ -4056,19 +4816,26 @@ function switchThread(id) {
 // Thread Header & Input Updates
 // ═══════════════════════════════════════════
 function updateThreadHeader(thread) {
-  const titleEl = document.getElementById('mainTitle');
-  
   if (thread.mode === 'group') {
-    const parts = thread.participants.map(pid => {
+    const names = thread.participants.map(pid => {
       const agent = AGENTS[pid];
-      if (!agent) return '';
-      return `<span class="participant-tag"><span style="color:${agent.accentDim}">${agent.name}</span></span>`;
-    }).join('<span class="participant-separator">·</span>');
-    
-    titleEl.innerHTML = `<span class="main-header-participants">${parts}</span>`;
+      return agent ? agent.name : '';
+    }).filter(Boolean).join(' · ');
+    updateBreadcrumb(['Chat', names || 'Group']);
   } else {
     const agent = AGENTS[thread.agentId || 'main'] || AGENTS.main;
-    titleEl.innerHTML = `<span style="color:${agent.accentDim}">${thread.name || agent.name}</span>`;
+    updateBreadcrumb(['Chat', thread.name || agent.name]);
+  }
+  // Also update the header glyph
+  const glyphEl = document.getElementById('mainHeaderGlyph');
+  if (glyphEl) {
+    if (thread.mode === 'group') {
+      glyphEl.textContent = '⏀△';
+    } else {
+      const agent = AGENTS[thread.agentId || 'main'] || AGENTS.main;
+      glyphEl.textContent = agent.glyph;
+      glyphEl.style.color = agent.accent;
+    }
   }
 }
 
@@ -4132,6 +4899,7 @@ function renderThreadList() {
         <div class="thread-meta">${t.messages.length} messages${isGroup ? ' · group' : ''}</div>
       </div>
       <div class="thread-actions">
+        ${t.messages.length >= 10 ? `<button class="thread-action-btn resume" onclick="resumeThread('${t.id}', event)" title="Resume">↪</button>` : ''}
         <button class="thread-action-btn" onclick="startRename('${t.id}', event)" title="Rename">✎</button>
         <button class="thread-action-btn delete" onclick="deleteThread('${t.id}', event)" title="Delete">✕</button>
       </div>
@@ -4152,6 +4920,7 @@ let sidebarCollapsed = false;
 
 function toggleSidebarCollapse() {
   sidebarCollapsed = !sidebarCollapsed;
+  viewState.sidebarVisible = !sidebarCollapsed;
   const sidebar = document.getElementById('sidebar');
   sidebar.classList.toggle('collapsed', sidebarCollapsed);
   localStorage.setItem('vektor-sidebar-collapsed', sidebarCollapsed ? '1' : '0');
@@ -4236,6 +5005,7 @@ function renderMessages() {
   // Apply syntax highlighting to all code blocks
   applyHighlighting();
   scrollToBottom();
+  updateContextHealth();
 }
 
 function scrollToBottom() {
@@ -4250,7 +5020,27 @@ function scrollToBottom() {
 // ══════════════════════════════════════════════
 function formatMessage(text) {
   if (!text) return '';
+  text = preprocessLocalImages(text);
   return renderMarkdown(text);
+}
+
+function preprocessLocalImages(text) {
+  const imgExtPattern = '\\.(png|jpg|jpeg|gif|webp|svg)';
+  const pathPattern = `((?:/(?:Users|home|tmp)/|~/)\\S*?${imgExtPattern})`;
+  
+  // Pattern 2: rewrite markdown images with local paths: ![alt](/Users/...)
+  text = text.replace(new RegExp(`!\\[([^\\]]*)\\]\\(${pathPattern}\\)`, 'gi'), (m, alt, path, ext) => {
+    return `![${alt}](/api/local-image?path=${encodeURIComponent(path)})`;
+  });
+  
+  // Pattern 1: bare file paths not already in markdown image syntax
+  // Match paths that aren't preceded by ]( or src=" etc
+  text = text.replace(new RegExp(`(?<!\\]\\()(?<!\\/api\\/local-image\\?path=)(?:^|(?<=\\s|\\(|\`))${pathPattern}(?=\\s|\\)|$|\`)`, 'gim'), (m, path, ext) => {
+    const cleanPath = path.replace(/^`|`$/g, '');
+    return `\n![image](/api/local-image?path=${encodeURIComponent(cleanPath)})\n`;
+  });
+  
+  return text;
 }
 
 function renderMarkdown(text) {
@@ -4466,7 +5256,7 @@ function renderMarkdown(text) {
 // Inline formatting: bold, italic, strikethrough, links, images
 function inlineFormat(text) {
   // Images: ![alt](url)
-  text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;margin:8px 0;">');
+  text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;margin:8px 0;cursor:pointer;border:1px solid var(--border, rgba(255,255,255,0.1));" onclick="openLightbox(this.src)">');
   // Links: [text](url)
   text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   // Bold + italic: ***text***
@@ -6129,52 +6919,154 @@ function checkForArtifactsAtIndex(msgIdx) {
 // ══════════════════════════════════════════════
 
 let currentPanel = 'chat';
-let ccCache = { skills: null, history: null, cron: null, projects: null, memory: null, system: null };
+let ccCache = { skills: null, history: null, cron: null, projects: null, memory: null, system: null, journal: null };
+let journalPollTimer = null;
 let ccFilters = { historyAgent: null, historySearch: '', skillsSearch: '', projectsSearch: '' };
 
-function switchPanel(panel) {
-  currentPanel = panel;
+const viewState = {
+  activeSection: 'chat',
+  sidebarVisible: true,
+  scrollPositions: {},
+  searchQueries: {},
+  detailContext: null
+};
 
-  // Update nav buttons
-  document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.panel === panel);
+const sectionLabels = {
+  home: 'Home', chat: 'Chat', skills: 'Skills', history: 'Sessions',
+  cron: 'Tasks', projects: 'Projects', memory: 'Memory', journal: 'Journal'
+};
+
+function switchSection(section) {
+  // Save scroll position of current sidebar list
+  const currentList = document.querySelector('.browse-panel.active .browse-list') || document.getElementById('threadList');
+  if (currentList) {
+    viewState.scrollPositions[viewState.activeSection] = currentList.scrollTop;
+  }
+
+  // Save search query if any
+  const currentSearch = document.querySelector('.browse-panel.active .browse-search');
+  if (currentSearch) {
+    viewState.searchQueries[viewState.activeSection] = currentSearch.value;
+  }
+
+  viewState.activeSection = section;
+  currentPanel = section === 'home' ? 'chat' : section;
+
+  // Update nav-rail active states
+  document.querySelectorAll('.nav-rail-btn[data-section]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.section === section);
   });
 
-  // Show/hide thread list vs browse panels
   const threadList = document.getElementById('threadList');
-  const browseNames = ['Skills', 'History', 'Cron', 'Projects', 'Memory'];
-
-  // Always close detail view when switching panels
-  closeDetailView();
-
-  // Also hide/show the main header appropriately
-  const mainHeader = document.querySelector('.main-header');
-
+  const browseNames = ['Skills', 'History', 'Cron', 'Projects', 'Memory', 'Journal'];
   const messagesEl = document.getElementById('messages');
   const inputArea = document.querySelector('.input-area');
+  const mainHeader = document.querySelector('.main-header');
+  const detailView = document.getElementById('detailView');
+  const dashboardView = document.getElementById('dashboardView');
+  const sidebar = document.getElementById('sidebar');
 
-  if (panel === 'chat') {
+  // Hide all main views
+  detailView.classList.remove('active');
+  dashboardView.style.display = 'none';
+  messagesEl.style.display = 'none';
+  inputArea.style.display = 'none';
+  if (mainHeader) mainHeader.style.display = '';
+
+  if (section === 'home') {
+    // Home: show dashboard, collapse sidebar
+    sidebar.classList.add('collapsed');
+    viewState.sidebarVisible = false;
+    threadList.style.display = 'none';
+    browseNames.forEach(p => {
+      const el = document.getElementById('panel' + p);
+      if (el) el.classList.remove('active');
+    });
+    dashboardView.style.display = '';
+    updateBreadcrumb(['Home']);
+    updateDashboardStats();
+    // Deactivate all nav buttons for home
+    document.querySelectorAll('.nav-rail-btn[data-section]').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    return;
+  }
+
+  // Ensure sidebar is visible
+  sidebar.classList.remove('collapsed');
+  viewState.sidebarVisible = true;
+
+  if (section === 'chat') {
     threadList.style.display = '';
     browseNames.forEach(p => {
       const el = document.getElementById('panel' + p);
       if (el) el.classList.remove('active');
     });
-    if (mainHeader) mainHeader.style.display = '';
     messagesEl.style.display = '';
     inputArea.style.display = '';
+    updateBreadcrumb(['Chat']);
   } else {
     threadList.style.display = 'none';
     browseNames.forEach(p => {
       const el = document.getElementById('panel' + p);
-      if (el) el.classList.toggle('active', p.toLowerCase() === panel);
+      if (el) el.classList.toggle('active', p.toLowerCase() === section);
     });
-    // Hide chat area when browsing
-    if (mainHeader) mainHeader.style.display = 'none';
-    messagesEl.style.display = 'none';
-    inputArea.style.display = 'none';
-    // Load data for the panel
-    loadPanelData(panel);
+    // Show empty main with section label
+    updateBreadcrumb([sectionLabels[section] || section]);
+    loadPanelData(section);
   }
+
+  // Restore scroll position
+  requestAnimationFrame(() => {
+    const newList = document.querySelector('.browse-panel.active .browse-list') || (section === 'chat' ? document.getElementById('threadList') : null);
+    if (newList && viewState.scrollPositions[section]) {
+      newList.scrollTop = viewState.scrollPositions[section];
+    }
+    // Restore search query
+    const newSearch = document.querySelector('.browse-panel.active .browse-search');
+    if (newSearch && viewState.searchQueries[section]) {
+      newSearch.value = viewState.searchQueries[section];
+    }
+  });
+}
+
+// Backwards compatibility alias
+function switchPanel(panel) {
+  switchSection(panel);
+}
+
+// ── Breadcrumb ──
+
+function updateBreadcrumb(segments) {
+  const bc = document.getElementById('breadcrumb');
+  if (!bc) return;
+  if (segments.length === 1) {
+    bc.innerHTML = '<span class="breadcrumb-current">' + segments[0] + '</span>';
+  } else {
+    bc.innerHTML = segments.map((s, i) => {
+      if (i < segments.length - 1) {
+        return '<span class="breadcrumb-segment" onclick="breadcrumbBack(' + i + ')">' + s + '</span><span class="breadcrumb-separator">›</span>';
+      }
+      return '<span class="breadcrumb-current">' + s + '</span>';
+    }).join('');
+  }
+}
+
+function breadcrumbBack(index) {
+  if (index === 0) {
+    closeDetailView();
+  }
+}
+
+// ── Dashboard Stats ──
+
+function updateDashboardStats() {
+  const statThreads = document.getElementById('statThreads');
+  const statSkills = document.getElementById('statSkills');
+  const statMemory = document.getElementById('statMemory');
+  if (statThreads) statThreads.textContent = threads ? threads.length : '—';
+  if (statSkills && ccCache.skills) statSkills.textContent = ccCache.skills.length;
+  if (statMemory && ccCache.memory) statMemory.textContent = ccCache.memory.length;
 }
 
 async function loadPanelData(panel) {
@@ -6184,6 +7076,7 @@ async function loadPanelData(panel) {
     case 'cron': return loadCron();
     case 'projects': return loadProjects();
     case 'memory': return loadMemory();
+    case 'journal': return loadJournal();
   }
 }
 
@@ -6564,23 +7457,271 @@ async function openMemoryDetail(encodedId) {
   }
 }
 
+// ── Journal ──
+
+async function loadJournal(forceRefresh) {
+  if (ccCache.journal && !forceRefresh) return renderJournal(ccCache.journal);
+  try {
+    const res = await fetch('/api/journal');
+    const data = await res.json();
+    ccCache.journal = data;
+    renderJournal(data);
+  } catch {
+    document.getElementById('journalList').innerHTML = `<div class="browse-item-desc">Failed to load journal</div>`;
+  }
+  // Start polling if on journal tab
+  startJournalPoll();
+}
+
+function startJournalPoll() {
+  if (journalPollTimer) clearInterval(journalPollTimer);
+  journalPollTimer = setInterval(() => {
+    if (currentPanel === 'journal') loadJournal(true);
+    else { clearInterval(journalPollTimer); journalPollTimer = null; }
+  }, 60000);
+}
+
+// Journal state
+let journalEntries = [];      // currently visible (flattened, filtered, sorted)
+let journalAllEntries = [];   // ALL entries flattened from raw data
+let journalFilter = 'all';
+let journalSortMode = 'recent';
+let journalPageSize = 50;
+let journalShown = 0;
+let journalRawData = null;
+
+function renderJournal(data) {
+  journalRawData = data;
+  const s = data.stats || {};
+  document.getElementById('journalCount').textContent = s.thoughts_today != null ? `${s.thoughts_today} today` : '—';
+
+  document.getElementById('journalStats').innerHTML = `
+    <span class="journal-stat"><strong>${s.total_thoughts || 0}</strong> thoughts</span>
+    <span class="journal-stat"><strong>${s.total_memories || 0}</strong> memories</span>
+    <span class="journal-stat"><strong>${s.total_published || 0}</strong> published</span>
+  `;
+
+  // Flatten ALL entries into one array
+  const sections = data.sections || {};
+  journalAllEntries = [];
+
+  for (const t of (sections.recent_thoughts || [])) {
+    journalAllEntries.push({ type: 'thought', data: t, created: t.created || '', salience: t.salience || 0 });
+  }
+  for (const d of (sections.dreams || [])) {
+    journalAllEntries.push({ type: 'dream', data: d, created: d.created || '', salience: 0.9 });
+  }
+  for (const q of (sections.questions || [])) {
+    journalAllEntries.push({ type: 'question', data: q, created: q.created || '', salience: q.salience || 0 });
+  }
+  for (const p of (sections.published || [])) {
+    journalAllEntries.push({ type: 'published', data: p, created: p.published_at || '', salience: 1.0 });
+  }
+  for (const d of (sections.decay || [])) {
+    if (d.content_preview || d.action) {
+      journalAllEntries.push({ type: 'decay', data: d, created: d.timestamp || '', salience: 0 });
+    }
+  }
+
+  applyJournalFilters();
+}
+
+function applyJournalFilters() {
+  // Filter
+  let filtered = journalAllEntries;
+  if (journalFilter !== 'all') {
+    filtered = journalAllEntries.filter(e => e.type === journalFilter);
+  }
+
+  // Sort
+  if (journalSortMode === 'salience') {
+    filtered = [...filtered].sort((a, b) => b.salience - a.salience);
+  } else {
+    filtered = [...filtered].sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+  }
+
+  journalEntries = filtered;
+  journalShown = 0;
+  document.getElementById('journalList').innerHTML = '';
+  loadMoreJournal();
+
+  // Update filter pill counts
+  document.querySelectorAll('.journal-filter-pill').forEach(btn => {
+    const f = btn.dataset.filter;
+    btn.classList.toggle('active', f === journalFilter);
+    const count = f === 'all' ? journalAllEntries.length : journalAllEntries.filter(e => e.type === f).length;
+    const label = btn.textContent.replace(/\s*\(\d+\)/, '');
+    btn.textContent = `${label} (${count})`;
+  });
+
+  // Update sort buttons
+  document.querySelectorAll('.journal-sort-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.sort === journalSortMode);
+  });
+}
+
+function filterJournal(filter) {
+  journalFilter = filter;
+  applyJournalFilters();
+}
+
+function sortJournal(mode) {
+  journalSortMode = mode;
+  applyJournalFilters();
+}
+
+function loadMoreJournal() {
+  const list = document.getElementById('journalList');
+  const loadMoreBtn = document.getElementById('journalLoadMore');
+  const end = Math.min(journalShown + journalPageSize, journalEntries.length);
+  let html = '';
+
+  for (let i = journalShown; i < end; i++) {
+    const entry = journalEntries[i];
+    const { type, data } = entry;
+    let preview, time, badge, badgeClass, extraStyle = '';
+
+    if (type === 'thought') {
+      preview = (data.content || '').slice(0, 100) + (data.content?.length > 100 ? '…' : '');
+      time = data.time_ago || '';
+      badge = data.source || 'thought';
+      badgeClass = data.source || 'background';
+    } else if (type === 'dream') {
+      preview = (data.content || '').slice(0, 100) + (data.content?.length > 100 ? '…' : '');
+      time = data.time_ago || '';
+      badge = 'dream';
+      badgeClass = 'dream';
+    } else if (type === 'question') {
+      preview = '❓ ' + ((data.content || '').slice(0, 100) + (data.content?.length > 100 ? '…' : ''));
+      time = data.time_ago || '';
+      badge = 'question';
+      badgeClass = 'question';
+    } else if (type === 'published') {
+      preview = (data.text || '').slice(0, 100) + (data.text?.length > 100 ? '…' : '');
+      time = data.time_ago || '';
+      badge = 'published';
+      badgeClass = 'published';
+    } else if (type === 'decay') {
+      preview = data.content_preview || `${data.action || 'decay'} event`;
+      time = data.time_ago || '';
+      badge = data.action || 'decay';
+      badgeClass = data.action || 'soften';
+      extraStyle = ' style="opacity:0.7"';
+    }
+
+    html += `
+      <div class="journal-item" onclick="openJournalEntry(${i})">
+        <div class="journal-item-preview"${extraStyle}>${escapeHtml(preview)}</div>
+        <div class="journal-item-meta">
+          <span class="journal-item-time">${escapeHtml(time)}</span>
+          <span class="journal-badge ${badgeClass}">${badge}</span>
+        </div>
+      </div>`;
+  }
+
+  journalShown = end;
+  list.insertAdjacentHTML('beforeend', html);
+
+  if (journalShown < journalEntries.length) {
+    loadMoreBtn.style.display = 'block';
+    loadMoreBtn.textContent = `Load more… (${journalEntries.length - journalShown} remaining)`;
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }
+
+  if (!journalEntries.length) {
+    list.innerHTML = '<div class="browse-item-desc" style="padding:12px">No entries match this filter</div>';
+  }
+}
+
+function openJournalEntry(idx) {
+  const entry = journalEntries[idx];
+  if (!entry) return;
+
+  // Highlight active item
+  document.querySelectorAll('.journal-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+
+  const { type, data } = entry;
+  let title, subtitle, contentHtml;
+
+  if (type === 'thought') {
+    title = data.source ? data.source.charAt(0).toUpperCase() + data.source.slice(1) : 'Thought';
+    subtitle = data.time_ago || '';
+    const tagsHtml = (data.tags || []).map(tag => `<span class="journal-tag">${escapeHtml(tag)}</span>`).join(' ');
+    contentHtml = `
+      <div class="journal-detail-content">${escapeHtml(data.content)}</div>
+      <div class="journal-detail-meta">
+        ${data.source ? `<span class="journal-badge ${data.source}">${data.source}</span>` : ''}
+        ${data.salience != null ? `<span class="journal-badge background">salience ${data.salience.toFixed(2)}</span>` : ''}
+        ${data.delivered ? '<span class="journal-badge published">delivered</span>' : ''}
+        ${data.published ? '<span class="journal-badge published">published</span>' : ''}
+      </div>
+      ${tagsHtml ? `<div class="journal-detail-tags">${tagsHtml}</div>` : ''}`;
+  } else if (type === 'dream') {
+    title = 'Dream';
+    subtitle = data.time_ago || '';
+    const tagsHtml = (data.tags || []).map(tag => `<span class="journal-tag">${escapeHtml(tag)}</span>`).join(' ');
+    contentHtml = `
+      <div class="journal-detail-dream">
+        <div class="journal-detail-content">${escapeHtml(data.content)}</div>
+      </div>
+      ${tagsHtml ? `<div class="journal-detail-tags" style="margin-top:12px">${tagsHtml}</div>` : ''}`;
+  } else if (type === 'question') {
+    title = 'Question';
+    subtitle = data.time_ago || '';
+    contentHtml = `
+      <div class="journal-detail-content">❓ ${escapeHtml(data.content)}</div>
+      <div class="journal-detail-meta">
+        ${data.salience != null ? `<span class="journal-badge question">salience ${data.salience.toFixed(2)}</span>` : ''}
+      </div>`;
+  } else if (type === 'published') {
+    title = 'Published to X';
+    subtitle = data.time_ago || '';
+    const link = data.tweet_id ? `<a class="journal-detail-tweet-link" href="https://x.com/polyphonicchat/status/${data.tweet_id}" target="_blank">View on X →</a>` : '';
+    contentHtml = `
+      <div class="journal-detail-content">${escapeHtml(data.text)}</div>
+      <div class="journal-detail-meta">
+        <span class="journal-badge published">published</span>
+        ${link}
+      </div>`;
+  } else if (type === 'decay') {
+    title = 'Memory Decay';
+    subtitle = data.time_ago || '';
+    contentHtml = `
+      <div class="journal-detail-content">${escapeHtml(data.content_preview || '')}</div>
+      <div class="journal-detail-meta">
+        ${data.action ? `<span class="journal-badge ${data.action}">${data.action}</span>` : ''}
+        <span class="journal-sharpness">${(data.old_sharpness || 0).toFixed(2)} <span class="arrow">→</span> ${(data.new_sharpness || 0).toFixed(2)}</span>
+      </div>`;
+  }
+
+  showDetailView(title, subtitle, contentHtml);
+}
+
 // ── Detail View ──
 
 function showDetailView(title, subtitle, contentHtml) {
   const messagesEl = document.getElementById('messages');
   const inputArea = document.querySelector('.input-area');
-  const mainHeader = document.querySelector('.main-header');
   const detailView = document.getElementById('detailView');
+  const dashboardView = document.getElementById('dashboardView');
 
-  // Hide chat elements, show detail
+  // Hide chat elements and dashboard, show detail
   messagesEl.style.display = 'none';
   inputArea.style.display = 'none';
-  if (mainHeader) mainHeader.style.display = 'none';
+  dashboardView.style.display = 'none';
   detailView.classList.add('active');
 
-  document.getElementById('detailTitle').textContent = title;
-  document.getElementById('detailSubtitle').textContent = subtitle;
   document.getElementById('detailContent').innerHTML = contentHtml;
+
+  // Update breadcrumb with section > item
+  const sectionLabel = sectionLabels[currentPanel] || currentPanel;
+  updateBreadcrumb([sectionLabel, title]);
+
+  // Store detail context
+  viewState.detailContext = { section: currentPanel, title: title };
 
   // Scroll to top
   document.getElementById('detailContent').scrollTop = 0;
@@ -6589,21 +7730,19 @@ function showDetailView(title, subtitle, contentHtml) {
 function closeDetailView() {
   const messagesEl = document.getElementById('messages');
   const inputArea = document.querySelector('.input-area');
-  const mainHeader = document.querySelector('.main-header');
   const detailView = document.getElementById('detailView');
 
   detailView.classList.remove('active');
+  viewState.detailContext = null;
 
-  // Only restore chat elements if we're on the chat panel
+  // Restore appropriate view
   if (currentPanel === 'chat') {
     messagesEl.style.display = '';
     inputArea.style.display = '';
-    if (mainHeader) mainHeader.style.display = '';
+    updateBreadcrumb(['Chat']);
   } else {
-    // For non-chat panels, hide everything in main area
-    messagesEl.style.display = 'none';
-    inputArea.style.display = 'none';
-    if (mainHeader) mainHeader.style.display = 'none';
+    // For non-chat panels, main area stays empty (list is in sidebar)
+    updateBreadcrumb([sectionLabels[currentPanel] || currentPanel]);
   }
 }
 
