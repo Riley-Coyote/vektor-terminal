@@ -5,3 +5,6 @@ build/icon.iconset/
 build/generate-icon.html
 *.dmg
 server.log
+screenshots/
+*.png
+!build/icon.png
