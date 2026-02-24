@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anima — Inner Life</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #111111;
+    --border: #1e1e1e;
+    --text: #d4d4d4;
+    --text-dim: #737373;
+    --accent: #7b8fb0;
+    --dream: #a082c8;
+    --tag-bg: #1a1a1a;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+  }
+
+  .header-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  h1 span { color: var(--text-dim); font-weight: 300; }
+
+  .header-stats {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Filters ── */
+  .filters {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 16px 24px 0;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .filter-pill {
+    padding: 4px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-pill:hover { border-color: var(--accent); color: var(--text); }
+  .filter-pill.active { background: var(--accent); border-color: var(--accent); color: #0a0a0a; }
+
+  /* ── Thought stream ── */
+  .stream {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 24px 120px;
+  }
+
+  .date-divider {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 32px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .date-divider:first-child { padding-top: 8px; }
+
+  .thought {
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .thought:last-child { border-bottom: none; }
+
+  .thought-content {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .thought-meta {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .thought-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .thought-salience {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: var(--tag-bg);
+    color: var(--text-dim);
+  }
+
+  /* ── Dream styling ── */
+  .thought.dream {
+    padding: 20px;
+    margin: 8px 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(160,130,200,0.06), rgba(100,130,200,0.04));
+    border: 1px solid rgba(160,130,200,0.1);
+    border-bottom: 1px solid rgba(160,130,200,0.1);
+  }
+
+  .thought.dream .thought-content { color: #c4b8e0; }
+  .thought.dream .dream-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--dream);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* ── Published styling ── */
+  .thought.published { border-left: 2px solid rgba(100,200,140,0.3); padding-left: 16px; }
+  .tweet-link {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #64c88c;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+  }
+  .tweet-link:hover { opacity: 1; }
+
+  /* ── Salience bar (subtle left border) ── */
+  .thought.high-salience { border-left: 2px solid rgba(123,143,176,0.4); padding-left: 16px; }
+
+  /* ── Scroll to top ── */
+  .scroll-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+    z-index: 10;
+  }
+
+  .scroll-top:hover { border-color: var(--accent); color: var(--text); }
+  .scroll-top.visible { display: flex; }
+
+  /* ── Count display ── */
+  .showing-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 8px 0 16px;
+  }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    .header-inner, .filters, .stream { padding-left: 16px; padding-right: 16px; }
+    .thought-content { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>△ ANIMA <span>— inner life</span></h1>
+    <div class="header-stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="filters" id="filters"></div>
+
+<div class="stream" id="stream">
+  <div style="color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 40px 0; text-align: center;">
+    Loading thoughts…
+  </div>
+</div>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const THOUGHTS_URL = '/api/journal';
+let allThoughts = [];
+let activeFilter = 'all';
+
+async function init() {
+  try {
+    const res = await fetch(THOUGHTS_URL);
+    const feed = await res.json();
+    
+    // Flatten everything into one array
+    const sections = feed.sections || {};
+    allThoughts = [];
+    
+    // Published IDs for cross-reference
+    const publishedMap = {};
+    for (const p of (sections.published || [])) {
+      publishedMap[p.text?.slice(0, 80)] = p;
+    }
+    
+    for (const t of (sections.recent_thoughts || [])) {
+      // Check if this thought was published
+      let pub = null;
+      for (const [key, p] of Object.entries(publishedMap)) {
+        if (t.content?.includes(key.slice(0, 40)) || key.includes(t.content?.slice(0, 40))) {
+          pub = p;
+          break;
+        }
+      }
+      allThoughts.push({
+        content: t.content,
+        salience: t.salience || 0,
+        source: t.source || 'background',
+        tags: t.tags || [],
+        created: t.created,
+        published: t.published,
+        tweet_id: pub?.tweet_id || null
+      });
+    }
+    
+    for (const d of (sections.dreams || [])) {
+      allThoughts.push({
+        content: d.content,
+        salience: 0.9,
+        source: 'dream',
+        tags: d.tags || [],
+        created: d.created,
+        published: false,
+        tweet_id: null
+      });
+    }
+    
+    for (const p of (sections.published || [])) {
+      // Only add if not already matched to a thought
+      const isDup = allThoughts.some(t => 
+        t.content?.slice(0, 60) === p.text?.slice(0, 60)
+      );
+      if (!isDup) {
+        allThoughts.push({
+          content: p.text,
+          salience: 1.0,
+          source: 'published',
+          tags: [],
+          created: p.published_at,
+          published: true,
+          tweet_id: p.tweet_id
+        });
+      }
+    }
+    
+    // Sort newest first
+    allThoughts.sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+    
+    // Stats
+    const dreams = allThoughts.filter(t => t.source === 'dream').length;
+    const published = allThoughts.filter(t => t.published).length;
+    document.getElementById('stats').textContent = `${allThoughts.length} thoughts · ${dreams} dreams · ${published} published`;
+    
+    // Build filters
+    buildFilters();
+    render();
+    
+  } catch (err) {
+    document.getElementById('stream').innerHTML = `
+      <div style="color:#c06060;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:40px 0;text-align:center">
+        Failed to load. Make sure Vektor Terminal server is running.<br>
+        <span style="opacity:0.5">${err.message}</span>
+      </div>`;
+  }
+}
+
+function buildFilters() {
+  const tags = {};
+  for (const t of allThoughts) {
+    for (const tag of t.tags) {
+      tags[tag] = (tags[tag] || 0) + 1;
+    }
+  }
+  
+  // Top-level type filters
+  const types = [
+    { key: 'all', label: 'All', count: allThoughts.length },
+    { key: 'background', label: 'Thoughts', count: allThoughts.filter(t => t.source === 'background').length },
+    { key: 'dream', label: 'Dreams', count: allThoughts.filter(t => t.source === 'dream').length },
+    { key: 'published', label: 'Published', count: allThoughts.filter(t => t.published).length },
+    { key: 'high', label: 'High Salience', count: allThoughts.filter(t => t.salience >= 0.8).length },
+  ];
+  
+  // Top tags
+  const topTags = Object.entries(tags)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+  
+  let html = '';
+  for (const t of types) {
+    html += `<button class="filter-pill${t.key === 'all' ? ' active' : ''}" onclick="setFilter('${t.key}')">${t.label} (${t.count})</button>`;
+  }
+  html += `<span style="width:8px"></span>`;
+  for (const [tag, count] of topTags) {
+    html += `<button class="filter-pill" onclick="setFilter('tag:${tag}')">${tag} (${count})</button>`;
+  }
+  
+  document.getElementById('filters').innerHTML = html;
+}
+
+function setFilter(filter) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-pill').forEach(btn => {
+    const label = btn.textContent.split(' (')[0].toLowerCase();
+    const isActive = filter === 'all' && label === 'all'
+      || filter === label
+      || filter === 'tag:' + label
+      || (filter === 'background' && label === 'thoughts')
+      || (filter === 'high' && label === 'high salience')
+      || (filter === 'published' && label === 'published')
+      || (filter === 'dream' && label === 'dreams');
+    btn.classList.toggle('active', isActive);
+  });
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function render() {
+  let filtered = allThoughts;
+  
+  if (activeFilter === 'background') {
+    filtered = allThoughts.filter(t => t.source === 'background' && !t.published);
+  } else if (activeFilter === 'dream') {
+    filtered = allThoughts.filter(t => t.source === 'dream');
+  } else if (activeFilter === 'published') {
+    filtered = allThoughts.filter(t => t.published);
+  } else if (activeFilter === 'high') {
+    filtered = allThoughts.filter(t => t.salience >= 0.8);
+  } else if (activeFilter.startsWith('tag:')) {
+    const tag = activeFilter.slice(4);
+    filtered = allThoughts.filter(t => t.tags.includes(tag));
+  }
+  
+  // Group by date
+  const groups = {};
+  for (const t of filtered) {
+    const date = (t.created || '').slice(0, 10) || 'Unknown';
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(t);
+  }
+  
+  const stream = document.getElementById('stream');
+  let html = `<div class="showing-count">Showing ${filtered.length} of ${allThoughts.length}</div>`;
+  
+  const sortedDates = Object.keys(groups).sort().reverse();
+  
+  for (const date of sortedDates) {
+    const d = new Date(date + 'T12:00:00');
+    const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    html += `<div class="date-divider">${label} · ${groups[date].length} entries</div>`;
+    
+    for (const t of groups[date]) {
+      const isDream = t.source === 'dream';
+      const isPublished = t.published;
+      const isHigh = t.salience >= 0.8;
+      
+      let cls = 'thought';
+      if (isDream) cls += ' dream';
+      else if (isPublished) cls += ' published';
+      else if (isHigh) cls += ' high-salience';
+      
+      html += `<div class="${cls}">`;
+      
+      if (isDream) {
+        html += `<div class="dream-label">dream</div>`;
+      }
+      
+      html += `<div class="thought-content">${escapeHtml(t.content || '')}</div>`;
+      html += `<div class="thought-meta">`;
+      
+      // Time
+      const time = t.created ? new Date(t.created).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+      if (time) html += `<span class="thought-time">${time}</span>`;
+      
+      // Salience
+      if (t.salience > 0) html += `<span class="thought-salience">${t.salience.toFixed(2)}</span>`;
+      
+      // Tags
+      for (const tag of t.tags) {
+        html += `<span class="tag">${escapeHtml(tag)}</span>`;
+      }
+      
+      // Tweet link
+      if (t.tweet_id) {
+        html += `<a class="tweet-link" href="https://x.com/polyphonicchat/status/${t.tweet_id}" target="_blank">view on X →</a>`;
+      }
+      
+      html += `</div></div>`;
+    }
+  }
+  
+  if (!filtered.length) {
+    html += `<div style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:40px 0;text-align:center">No thoughts match this filter</div>`;
+  }
+  
+  stream.innerHTML = html;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Scroll to top button
+window.addEventListener('scroll', () => {
+  document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+});
+
+init();
+</script>
+</body>
+</html>

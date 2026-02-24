@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlink
 import { join, dirname, extname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { homedir } from 'os';
 import { createReadStream } from 'fs';
 import { createInterface } from 'readline';
 
@@ -377,6 +378,22 @@ const upload = multer({
 });
 
 // POST /api/upload — multipart file upload
+// Serve local image files by absolute path
+app.get('/api/local-image', (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath) return errorResponse(res, 400, 'bad_request', 'Missing path parameter');
+  
+  const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+  const ext = extname(filePath).toLowerCase();
+  if (!allowedExts.includes(ext)) return errorResponse(res, 400, 'bad_request', 'Not an image file');
+  if (!existsSync(filePath)) return errorResponse(res, 404, 'not_found', 'File not found');
+  
+  const mimeTypes = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
+  res.setHeader('Content-Type', mimeTypes[ext]);
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  createReadStream(filePath).pipe(res);
+});
+
 app.post('/api/upload', upload.array('files', 10), (req, res) => {
   if (!req.files || req.files.length === 0) {
     return errorResponse(res, 400, 'bad_request', 'No files uploaded');
@@ -1175,6 +1192,20 @@ app.get('/api/projects/:id', (req, res) => {
 
 // ── 4e. MEMORY EXPLORER ──
 
+app.get('/api/journal', (req, res) => {
+  try {
+    const journalPath = join(homedir(), 'clawd-anima', 'inner_life', 'data', 'journal_feed.json');
+    if (!existsSync(journalPath)) {
+      return res.json({ generated: null, stats: {}, sections: {} });
+    }
+    const data = JSON.parse(readFileSync(journalPath, 'utf-8'));
+    res.json(data);
+  } catch (err) {
+    console.error('Journal feed error:', err.message);
+    res.status(500).json({ error: 'Failed to read journal feed' });
+  }
+});
+
 app.get('/api/memory', (req, res) => {
   try {
     const agentConfig = getAgentConfig(req.query.agent);
@@ -1447,6 +1478,15 @@ app.get('/index.html', (req, res) => {
   res.redirect('/');
 });
 
+app.get('/anima', (req, res) => {
+  try {
+    const fresh = readFileSync(join(__dirname, 'anima-thoughts.html'), 'utf-8');
+    res.type('html').send(fresh);
+  } catch (err) {
+    res.status(500).send('Failed to load anima-thoughts.html');
+  }
+});
+
 // Favicon
 app.get('/favicon.ico', (req, res) => {
   res.status(204).end();
@@ -1547,6 +1587,318 @@ function wsBroadcast(data, excludeWs = null) {
 
 
 // ══════════════════════════════════════════════
+// CONVERSATION ARCHIVE (EPISODIC MEMORY)
+// ══════════════════════════════════════════════
+
+const CONVERSATIONS_DIR = join(MEMORY_DIR, 'conversations');
+const CONVERSATIONS_INDEX_FILE = join(CONVERSATIONS_DIR, 'index.json');
+
+// Ensure conversations directory exists
+if (!existsSync(CONVERSATIONS_DIR)) mkdirSync(CONVERSATIONS_DIR, { recursive: true });
+
+function loadConversationsIndex() {
+  if (!existsSync(CONVERSATIONS_INDEX_FILE)) return [];
+  try {
+    return JSON.parse(readFileSync(CONVERSATIONS_INDEX_FILE, 'utf-8'));
+  } catch {
+    return [];
+  }
+}
+
+function saveConversationsIndex(index) {
+  try {
+    writeFileSync(CONVERSATIONS_INDEX_FILE, JSON.stringify(index, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[Archive] Failed to save index:', err);
+  }
+}
+
+// POST /api/threads/:id/archive — archive thread to JSONL
+app.post('/api/threads/:id/archive', (req, res) => {
+  try {
+    const thread = req.body.thread || readThread(req.params.id);
+    if (!thread) return errorResponse(res, 404, 'not_found', 'Thread not found');
+
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const dateDir = join(CONVERSATIONS_DIR, dateStr);
+    if (!existsSync(dateDir)) mkdirSync(dateDir, { recursive: true });
+
+    const archivePath = join(dateDir, `thread-${thread.id}.jsonl`);
+    const lines = thread.messages.map(m => JSON.stringify({
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp || now.toISOString(),
+      agentId: m.agentId || thread.agentId || 'main'
+    }));
+
+    writeFileSync(archivePath, lines.join('\n') + '\n', 'utf-8');
+
+    // Update index
+    const index = loadConversationsIndex();
+    const existingIdx = index.findIndex(e => e.threadId === thread.id);
+    const entry = {
+      threadId: thread.id,
+      title: thread.name || `Thread ${thread.id}`,
+      date: dateStr,
+      messageCount: thread.messages.length,
+      firstMessageTimestamp: thread.messages[0]?.timestamp || now.toISOString(),
+      lastMessageTimestamp: thread.messages[thread.messages.length - 1]?.timestamp || now.toISOString(),
+      archivedAt: now.toISOString()
+    };
+
+    if (existingIdx >= 0) {
+      index[existingIdx] = entry;
+    } else {
+      index.push(entry);
+    }
+
+    saveConversationsIndex(index);
+
+    res.json({ success: true, path: archivePath, entry });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+// GET /api/conversations/index — return index of all archived conversations
+app.get('/api/conversations/index', (req, res) => {
+  try {
+    const index = loadConversationsIndex();
+    res.json({ conversations: index, total: index.length });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+// GET /api/conversations/:date/:threadId — return full transcript of an archived thread
+app.get('/api/conversations/:date/:threadId', (req, res) => {
+  try {
+    const { date, threadId } = req.params;
+    const archivePath = join(CONVERSATIONS_DIR, date, `thread-${threadId}.jsonl`);
+    
+    if (!existsSync(archivePath)) {
+      return errorResponse(res, 404, 'not_found', 'Archived conversation not found');
+    }
+
+    const content = readFileSync(archivePath, 'utf-8');
+    const messages = content.trim().split('\n').map(line => {
+      try { return JSON.parse(line); } catch { return null; }
+    }).filter(Boolean);
+
+    res.json({ messages, threadId, date });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+// GET /api/conversations/search — search conversation archives
+app.get('/api/conversations/search', (req, res) => {
+  try {
+    const { q, date } = req.query;
+    const index = loadConversationsIndex();
+    let matches = [];
+
+    // Filter by date if provided
+    let searchEntries = index;
+    if (date) {
+      searchEntries = index.filter(e => e.date === date);
+    }
+
+    // If no query, return all (filtered by date)
+    if (!q) {
+      matches = searchEntries.map(e => ({ ...e, snippets: [] }));
+      return res.json({ results: matches, total: matches.length });
+    }
+
+    const query = q.toLowerCase();
+
+    // Search through transcripts
+    for (const entry of searchEntries) {
+      const archivePath = join(CONVERSATIONS_DIR, entry.date, `thread-${entry.threadId}.jsonl`);
+      if (!existsSync(archivePath)) continue;
+
+      try {
+        const content = readFileSync(archivePath, 'utf-8');
+        const messages = content.trim().split('\n').map(line => {
+          try { return JSON.parse(line); } catch { return null; }
+        }).filter(Boolean);
+
+        const snippets = [];
+        for (const msg of messages) {
+          if (msg.content && msg.content.toLowerCase().includes(query)) {
+            const idx = msg.content.toLowerCase().indexOf(query);
+            const start = Math.max(0, idx - 50);
+            const end = Math.min(msg.content.length, idx + query.length + 50);
+            let snippet = msg.content.slice(start, end);
+            if (start > 0) snippet = '...' + snippet;
+            if (end < msg.content.length) snippet = snippet + '...';
+            snippets.push({ role: msg.role, snippet, timestamp: msg.timestamp });
+            if (snippets.length >= 3) break; // Max 3 snippets per thread
+          }
+        }
+
+        if (snippets.length > 0) {
+          matches.push({ ...entry, snippets });
+        }
+      } catch (err) {
+        console.error('[Search] Error reading archive:', archivePath, err);
+      }
+    }
+
+    res.json({ results: matches, total: matches.length, query: q });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+// POST /api/threads/:id/resume — prepare thread for resumption
+app.post('/api/threads/:id/resume', (req, res) => {
+  try {
+    // Get thread from request body or from server storage
+    let thread = req.body.thread || readThread(req.params.id);
+    if (!thread) {
+      // Try to load from archive
+      const index = loadConversationsIndex();
+      const entry = index.find(e => e.threadId === req.params.id);
+      if (!entry) {
+        return errorResponse(res, 404, 'not_found', 'Thread not found');
+      }
+      const archivePath = join(CONVERSATIONS_DIR, entry.date, `thread-${entry.threadId}.jsonl`);
+      if (!existsSync(archivePath)) {
+        return errorResponse(res, 404, 'not_found', 'Thread archive not found');
+      }
+      const content = readFileSync(archivePath, 'utf-8');
+      const messages = content.trim().split('\n').map(line => {
+        try { return JSON.parse(line); } catch { return null; }
+      }).filter(Boolean);
+      thread = { id: req.params.id, name: entry.title, messages };
+    }
+
+    if (!thread.messages || thread.messages.length === 0) {
+      return errorResponse(res, 400, 'bad_request', 'Thread has no messages');
+    }
+
+    // Take last N message pairs (user+assistant = 1 pair), targeting ~8000 tokens (~32000 chars)
+    const TARGET_CHARS = 32000;
+    let recentMessages = [];
+    let charCount = 0;
+    let pairCount = 0;
+
+    // Work backwards, collecting pairs
+    for (let i = thread.messages.length - 1; i >= 0; i--) {
+      const msg = thread.messages[i];
+      const msgChars = (msg.content || '').length;
+      
+      recentMessages.unshift(msg);
+      charCount += msgChars;
+      
+      // Count as pair if we have user+assistant sequence
+      if (msg.role === 'user' && i + 1 < thread.messages.length && thread.messages[i + 1].role === 'assistant') {
+        pairCount++;
+      }
+
+      // Stop if we have enough pairs or too many chars
+      if (pairCount >= 20 || charCount > TARGET_CHARS) break;
+    }
+
+    // Generate summary from messages BEFORE the carried-over ones
+    const summaryStartIdx = 0;
+    const summaryEndIdx = thread.messages.length - recentMessages.length;
+    const summaryMessages = thread.messages.slice(summaryStartIdx, summaryEndIdx);
+    
+    // Simple summary: first sentence of each user message
+    const summaryBullets = summaryMessages
+      .filter(m => m.role === 'user')
+      .map(m => {
+        const content = m.content || '';
+        const firstSentence = content.split(/[.!?]\s/)[0];
+        return firstSentence.slice(0, 100); // Max 100 chars per bullet
+      })
+      .filter(s => s.length > 0)
+      .map(s => `• ${s}`)
+      .join('\n');
+
+    const summary = summaryBullets || '(Earlier discussion not summarized)';
+
+    res.json({
+      summary,
+      recentMessages,
+      originalThreadId: thread.id,
+      originalThreadName: thread.name || `Thread ${thread.id}`,
+      totalMessages: thread.messages.length,
+      carriedOverMessages: recentMessages.length
+    });
+  } catch (err) {
+    errorResponse(res, 500, 'internal_error', err.message);
+  }
+});
+
+// Auto-archive: periodic check for threads with >5 messages
+let autoArchiveTimer = null;
+function startAutoArchive() {
+  if (autoArchiveTimer) return;
+  autoArchiveTimer = setInterval(() => {
+    try {
+      const files = readdirSync(THREADS_DIR).filter(f => f.endsWith('.json'));
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      // Load index once for the entire batch
+      const index = loadConversationsIndex();
+      let indexDirty = false;
+
+      for (const file of files) {
+        try {
+          const thread = JSON.parse(readFileSync(join(THREADS_DIR, file), 'utf-8'));
+          if ((thread.messages || []).length > 5) {
+            const dateDir = join(CONVERSATIONS_DIR, dateStr);
+            if (!existsSync(dateDir)) mkdirSync(dateDir, { recursive: true });
+
+            const archivePath = join(dateDir, `thread-${thread.id}.jsonl`);
+            const lines = thread.messages.map(m => JSON.stringify({
+              role: m.role,
+              content: m.content,
+              timestamp: m.timestamp || now.toISOString(),
+              agentId: m.agentId || thread.agentId || 'main'
+            }));
+
+            writeFileSync(archivePath, lines.join('\n') + '\n', 'utf-8');
+
+            // Update index entry
+            const existingIdx = index.findIndex(e => e.threadId === thread.id);
+            const entry = {
+              threadId: thread.id,
+              title: thread.name || `Thread ${thread.id}`,
+              date: dateStr,
+              messageCount: thread.messages.length,
+              firstMessageTimestamp: thread.messages[0]?.timestamp || now.toISOString(),
+              lastMessageTimestamp: thread.messages[thread.messages.length - 1]?.timestamp || now.toISOString(),
+              archivedAt: now.toISOString()
+            };
+
+            if (existingIdx >= 0) {
+              index[existingIdx] = entry;
+            } else {
+              index.push(entry);
+            }
+            indexDirty = true;
+          }
+        } catch (err) {
+          console.error('[AutoArchive] Error processing thread:', file, err);
+        }
+      }
+
+      if (indexDirty) saveConversationsIndex(index);
+    } catch (err) {
+      console.error('[AutoArchive] Error:', err);
+    }
+  }, 60_000); // Run every 60 seconds
+}
+
+// Start auto-archive on server boot
+startAutoArchive();
+
+// ══════════════════════════════════════════════
 // 6. SERVER STARTUP
 // ══════════════════════════════════════════════
 
@@ -1558,6 +1910,7 @@ server.timeout = 0; // No socket timeout for SSE
 // Graceful shutdown
 function shutdown() {
   console.log('\n⏀ Shutting down...');
+  if (autoArchiveTimer) clearInterval(autoArchiveTimer);
   wss.clients.forEach(ws => ws.close());
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 5000); // Force exit after 5s
