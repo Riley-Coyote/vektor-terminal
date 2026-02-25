@@ -1194,6 +1194,13 @@ app.get('/api/projects/:id', (req, res) => {
 
 app.get('/api/journal', (req, res) => {
   try {
+    const agentId = req.query.agent || 'main';
+
+    // Only Anima has a journal; other agents return empty
+    if (agentId !== 'anima') {
+      return res.json({ generated: null, stats: {}, sections: {} });
+    }
+
     const journalPath = join(homedir(), 'clawd-anima', 'inner_life', 'data', 'journal_feed.json');
     if (!existsSync(journalPath)) {
       return res.json({ generated: null, stats: {}, sections: {} });
