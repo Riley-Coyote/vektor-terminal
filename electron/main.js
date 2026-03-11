@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage, dialog } from 'electron';
+import { app, BrowserWindow, shell, Tray, Menu, nativeImage, dialog, ipcMain } from 'electron';
 import { spawn } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -7,13 +7,23 @@ import net from 'net';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-const PORT = 8088;
+const PORT = 8099;
 const SERVER_URL = `http://localhost:${PORT}`;
+const START_URL = process.env.VEKTOR_START_URL || SERVER_URL;
+
+if (process.env.VEKTOR_USER_DATA_DIR) {
+  try {
+    app.setPath('userData', process.env.VEKTOR_USER_DATA_DIR);
+  } catch (err) {
+    console.warn('[electron] Failed to override userData path:', err.message);
+  }
+}
 
 let mainWindow = null;
 let serverProcess = null;
 let tray = null;
 let isQuitting = false;
+const detachedWindows = new Map();
 
 // ── App Icon ──
 function getIconPath() {
@@ -190,21 +200,24 @@ function createWindow() {
     mainWindow.focus();
   });
 
-  // Load the local server
-  mainWindow.loadURL(SERVER_URL);
+  // Load the main dashboard
+  mainWindow.loadURL(START_URL);
 
   // Handle failed loads (server not ready yet)
   mainWindow.webContents.on('did-fail-load', (event, code, desc) => {
     console.log(`[window] Load failed (${code}): ${desc} — retrying in 1s...`);
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.loadURL(SERVER_URL);
+        mainWindow.loadURL(START_URL);
       }
     }, 1000);
   });
 
-  // Open external links in system browser
+  // Open external links in system browser; deny detached popups (handled via IPC)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.includes('?detached=') || url.includes('&detached=')) {
+      return { action: 'deny' };
+    }
     if (url.startsWith('http') && !url.startsWith(SERVER_URL)) {
       shell.openExternal(url);
       return { action: 'deny' };
@@ -224,6 +237,72 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+// ── Detached Window IPC ──
+
+ipcMain.handle('open-detached-window', (event, opts) => {
+  const { url, width = 500, height = 700, x, y, paneId } = opts;
+
+  // Reuse existing window if this pane is already detached
+  if (detachedWindows.has(paneId)) {
+    const existing = detachedWindows.get(paneId);
+    if (!existing.isDestroyed()) {
+      existing.focus();
+      return { success: true, reused: true };
+    }
+    detachedWindows.delete(paneId);
+  }
+
+  const child = new BrowserWindow({
+    width,
+    height,
+    x,
+    y,
+    titleBarStyle: 'hiddenInset',
+    transparent: true,
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    hasShadow: true,
+    alwaysOnTop: false,
+    minimizable: true,
+    maximizable: false,
+    fullscreenable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: join(__dirname, 'preload.cjs'),
+    },
+  });
+
+  // Hide traffic lights — frameless appearance with vibrancy support
+  child.setWindowButtonVisibility(false);
+
+  child.loadURL(url);
+
+  child.on('closed', () => {
+    detachedWindows.delete(paneId);
+    // Notify the main renderer that this detached window closed
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('detached-window-closed', paneId);
+    }
+  });
+
+  detachedWindows.set(paneId, child);
+  return { success: true, reused: false };
+});
+
+ipcMain.on('close-detached-window', (_event, paneId) => {
+  const win = detachedWindows.get(paneId);
+  if (win && !win.isDestroyed()) {
+    win.close();
+  }
+});
+
+ipcMain.on('set-detached-opacity', (_event, paneId, opacity) => {
+  // Reserved for future native window-level opacity control
+  // Currently CSS handles opacity via --glass-opacity
+});
 
 // ── Tray ──
 function createTray() {
@@ -329,6 +408,57 @@ function createMenu() {
       ],
     },
     {
+      label: 'Tools',
+      submenu: [
+        {
+          label: 'Component Gallery',
+          accelerator: 'CmdOrCtrl+G',
+          click: () => {
+            // Reuse existing window if open
+            if (detachedWindows.has('component-gallery')) {
+              const existing = detachedWindows.get('component-gallery');
+              if (!existing.isDestroyed()) {
+                existing.focus();
+                return;
+              }
+              detachedWindows.delete('component-gallery');
+            }
+
+            const child = new BrowserWindow({
+              width: 720,
+              height: 900,
+              titleBarStyle: 'hiddenInset',
+              transparent: true,
+              vibrancy: 'under-window',
+              visualEffectState: 'active',
+              hasShadow: true,
+              alwaysOnTop: false,
+              minimizable: true,
+              maximizable: true,
+              fullscreenable: true,
+              title: 'Component Gallery',
+              webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                sandbox: true,
+              },
+            });
+
+            child.loadURL(`${SERVER_URL}/components`);
+
+            child.on('closed', () => {
+              detachedWindows.delete('component-gallery');
+              if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('detached-window-closed', 'component-gallery');
+              }
+            });
+
+            detachedWindows.set('component-gallery', child);
+          },
+        },
+      ],
+    },
+    {
       label: 'Window',
       submenu: [
         { role: 'minimize' },
@@ -390,6 +520,11 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  // Close all detached windows
+  for (const [, win] of detachedWindows) {
+    if (!win.isDestroyed()) win.close();
+  }
+  detachedWindows.clear();
 });
 
 app.on('will-quit', () => {

@@ -1,7 +1,7 @@
 {
-  "name": "vektor-terminal",
+  "name": "vektor-terminal-public",
   "version": "1.0.0",
-  "description": "⏀ Vektor Terminal — Native interface for Clawdbot",
+  "description": "⏀ Vektor Terminal — Native interface for OpenClaw agents",
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
@@ -12,16 +12,24 @@
     "build": "electron-builder --mac",
     "build:dmg": "electron-builder --mac dmg",
     "build:dir": "electron-builder --mac dir",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "capture:electron": "node scripts/capture-electron.mjs",
+    "test:electron:snapshots": "playwright test -c playwright.electron.config.mjs",
+    "test:electron:update": "playwright test -c playwright.electron.config.mjs --update-snapshots"
   },
   "build": {
-    "appId": "com.vektor.terminal",
-    "productName": "Vektor",
+    "appId": "com.vektor.terminal.public",
+    "productName": "Vektor Public",
     "copyright": "Copyright © 2026",
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
-        { "target": "dmg", "arch": ["arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
       ],
       "icon": "build/icon.icns",
       "darkModeSupport": true,
@@ -32,8 +40,16 @@
       "title": "Vektor",
       "backgroundColor": "#161616",
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
     },
     "files": [
@@ -49,12 +65,19 @@
       {
         "from": "data/",
         "to": "data/",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "asar": false
   },
-  "keywords": ["vektor", "terminal", "clawdbot", "ai"],
+  "keywords": [
+    "vektor",
+    "terminal",
+    "openclaw",
+    "ai"
+  ],
   "author": "Riley Coyote",
   "license": "MIT",
   "dependencies": {
@@ -64,8 +87,10 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "concurrently": "^9.1.2",
     "electron": "^34.3.0",
     "electron-builder": "^25.1.8",
-    "concurrently": "^9.1.2"
+    "playwright": "^1.58.2"
   }
 }

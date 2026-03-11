@@ -1,0 +1,18 @@
+[
+  {
+    "id": "main",
+    "name": "Agent",
+    "glyph": "\u23c0",
+    "accent": "#8EC3E3",
+    "accentDim": "#6A9DBD",
+    "accentGlow": "rgba(142, 195, 227, 0.08)",
+    "workspace": "~/projects",
+    "memoryFile": "~/projects/MEMORY.md",
+    "memoryDir": "~/projects/memory",
+    "skillDirs": [
+      { "path": "~/.openclaw/skills", "source": "community" },
+      { "path": "~/projects/skills", "source": "custom" }
+    ],
+    "journalPath": null
+  }
+]
